@@ -22,7 +22,7 @@ type NavItem = {
   name: string;
   icon: React.ReactNode;
   path?: string;
-  subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
+  subItems?: { name: string; path: string; pro?: boolean; new?: boolean; roles?: string[] }[];
   roles?: string[]; // Add roles property to control visibility
 };
 
@@ -132,12 +132,22 @@ const studentNavItems: NavItem[] = [
   },
 ];
 
+// Other navigation items
 const othersItems: NavItem[] = [
   {
     icon: <PlugInIcon />,
     name: "Authentication",
     subItems: [
       { name: "Sign In", path: "/signin", pro: false },
+    ],
+    roles: ["admin", "student", "teacher", "superadmin"],
+  },
+  {
+    icon: <PlugInIcon />,
+    name: "Register",
+    subItems: [
+      { name: "Add Student", path: "/signin", pro: false },
+      { name: "Add Teacher", path: "/signin", pro: false },
     ],
     roles: ["admin", "student", "teacher", "superadmin"],
   },
@@ -215,23 +225,26 @@ const AppSidebar: React.FC = () => {
   };
 
   // Filter sub-items by role
-  const filterSubItemsByRole = (subItems, itemRoles) => {
+  const filterSubItemsByRole = (
+    subItems: { name: string; path: string; pro?: boolean; new?: boolean; roles?: string[] }[] | undefined,
+    itemRoles: string[] | undefined
+  ) => {
     if (!subItems) return [];
-    
+
     return subItems.filter(subItem => {
       // If the subItem has its own roles property, use that instead
       if (subItem.roles) {
-        return subItem.roles.includes(role);
+        return role !== null && subItem.roles.includes(role);
       }
       // Otherwise, use the parent item's roles
-      return !itemRoles || itemRoles.includes(role);
+      return !itemRoles || (role !== null && itemRoles.includes(role));
     });
   };
 
   const renderMenuItems = (items: NavItem[], menuType: "main" | "others") => {
     // Filter items by role
     const filteredItems = items.filter(item => {
-      return !item.roles || item.roles.includes(role);
+      return !item.roles || (role !== null && item.roles.includes(role));
     });
 
     return (
@@ -239,7 +252,7 @@ const AppSidebar: React.FC = () => {
         {filteredItems.map((nav, index) => {
           // Filter sub-items by role
           const filteredSubItems = filterSubItemsByRole(nav.subItems, nav.roles);
-          
+
           // Skip rendering if there are no sub-items after filtering
           if (nav.subItems && filteredSubItems.length === 0) {
             return null;
@@ -251,8 +264,8 @@ const AppSidebar: React.FC = () => {
                 <button
                   onClick={() => handleSubmenuToggle(index, menuType)}
                   className={`menu-item group ${openSubmenu?.type === menuType && openSubmenu?.index === index
-                      ? "menu-item-active"
-                      : "menu-item-inactive"
+                    ? "menu-item-active"
+                    : "menu-item-inactive"
                     } cursor-pointer ${!isExpanded && !isHovered
                       ? "lg:justify-center"
                       : "lg:justify-start"
@@ -260,8 +273,8 @@ const AppSidebar: React.FC = () => {
                 >
                   <span
                     className={`menu-item-icon-size  ${openSubmenu?.type === menuType && openSubmenu?.index === index
-                        ? "menu-item-icon-active"
-                        : "menu-item-icon-inactive"
+                      ? "menu-item-icon-active"
+                      : "menu-item-icon-inactive"
                       }`}
                   >
                     {nav.icon}
@@ -272,9 +285,9 @@ const AppSidebar: React.FC = () => {
                   {(isExpanded || isHovered || isMobileOpen) && (
                     <ChevronDownIcon
                       className={`ml-auto w-5 h-5 transition-transform duration-200 ${openSubmenu?.type === menuType &&
-                          openSubmenu?.index === index
-                          ? "rotate-180 text-brand-500"
-                          : ""
+                        openSubmenu?.index === index
+                        ? "rotate-180 text-brand-500"
+                        : ""
                         }`}
                     />
                   )}
@@ -288,8 +301,8 @@ const AppSidebar: React.FC = () => {
                   >
                     <span
                       className={`menu-item-icon-size ${isActive(nav.path)
-                          ? "menu-item-icon-active"
-                          : "menu-item-icon-inactive"
+                        ? "menu-item-icon-active"
+                        : "menu-item-icon-inactive"
                         }`}
                     >
                       {nav.icon}
@@ -319,8 +332,8 @@ const AppSidebar: React.FC = () => {
                         <Link
                           to={subItem.path}
                           className={`menu-dropdown-item ${isActive(subItem.path)
-                              ? "menu-dropdown-item-active"
-                              : "menu-dropdown-item-inactive"
+                            ? "menu-dropdown-item-active"
+                            : "menu-dropdown-item-inactive"
                             }`}
                         >
                           {subItem.name}
@@ -328,8 +341,8 @@ const AppSidebar: React.FC = () => {
                             {subItem.new && (
                               <span
                                 className={`ml-auto ${isActive(subItem.path)
-                                    ? "menu-dropdown-badge-active"
-                                    : "menu-dropdown-badge-inactive"
+                                  ? "menu-dropdown-badge-active"
+                                  : "menu-dropdown-badge-inactive"
                                   } menu-dropdown-badge`}
                               >
                                 new
@@ -338,8 +351,8 @@ const AppSidebar: React.FC = () => {
                             {subItem.pro && (
                               <span
                                 className={`ml-auto ${isActive(subItem.path)
-                                    ? "menu-dropdown-badge-active"
-                                    : "menu-dropdown-badge-inactive"
+                                  ? "menu-dropdown-badge-active"
+                                  : "menu-dropdown-badge-inactive"
                                   } menu-dropdown-badge`}
                               >
                                 pro
@@ -429,8 +442,8 @@ const AppSidebar: React.FC = () => {
             <div>
               <h2
                 className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${!isExpanded && !isHovered
-                    ? "lg:justify-center"
-                    : "justify-start"
+                  ? "lg:justify-center"
+                  : "justify-start"
                   }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? (
@@ -444,8 +457,8 @@ const AppSidebar: React.FC = () => {
             <div className="">
               <h2
                 className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${!isExpanded && !isHovered
-                    ? "lg:justify-center"
-                    : "justify-start"
+                  ? "lg:justify-center"
+                  : "justify-start"
                   }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? (
