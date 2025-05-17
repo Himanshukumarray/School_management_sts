@@ -15,6 +15,8 @@ import {
   TableIcon,
   UserCircleIcon,
 } from "../icons";
+import { GiArchiveRegister } from "react-icons/gi";
+
 import { useSidebar } from "../context/SidebarContext";
 import SidebarWidget from "./SidebarWidget";
 
@@ -89,6 +91,15 @@ const adminNavItems: NavItem[] = [
     subItems: [{ name: "Syllabus", path: "/SyllabusPage", pro: false }],
     roles: ["admin", "student", "teacher", "superadmin"],
   },
+  {
+    icon: <GiArchiveRegister />,
+    name: "Register",
+    subItems: [
+      { name: "Add Student", path: "/student-form", pro: false },
+      { name: "Add Teacher", path: "/teacher-form", pro: false },
+    ],
+    roles: ["admin", "superadmin"],
+  },
 ];
 
 // Student navigation items
@@ -108,14 +119,7 @@ const studentNavItems: NavItem[] = [
     name: "User Profile",
     path: "/profile",
   },
-  {
-    name: "Student",
-    icon: <PageIcon />,
-    subItems: [
-      { name: "Student Page", path: "/StudentPage", pro: false },
-      { name: "Leave Request", path: "/StudentLeaveRequestForm", pro: false },
-    ],
-  },
+  
   {
     icon: <PageIcon />,
     name: "Library",
@@ -130,6 +134,9 @@ const studentNavItems: NavItem[] = [
     icon: <TableIcon />,
     subItems: [{ name: "Syllabus", path: "/SyllabusPage", pro: false }],
   },
+
+  
+
 ];
 
 // Other navigation items
@@ -139,15 +146,6 @@ const othersItems: NavItem[] = [
     name: "Authentication",
     subItems: [
       { name: "Sign In", path: "/signin", pro: false },
-    ],
-    roles: ["admin", "student", "teacher", "superadmin"],
-  },
-  {
-    icon: <PlugInIcon />,
-    name: "Register",
-    subItems: [
-      { name: "Add Student", path: "/signin", pro: false },
-      { name: "Add Teacher", path: "/signin", pro: false },
     ],
     roles: ["admin", "student", "teacher", "superadmin"],
   },
