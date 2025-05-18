@@ -16,6 +16,7 @@ import {
   UserCircleIcon,
 } from "../icons";
 import { GiArchiveRegister } from "react-icons/gi";
+import { MdLocalLibrary } from "react-icons/md";
 
 import { useSidebar } from "../context/SidebarContext";
 import SidebarWidget from "./SidebarWidget";
@@ -75,7 +76,7 @@ const adminNavItems: NavItem[] = [
     roles: ["admin", "superadmin"],
   },
   {
-    icon: <PageIcon />,
+    icon: < MdLocalLibrary />,
     name: "Library",
     subItems: [
       { name: "Issue books", path: "/libpage", pro: false },
@@ -121,7 +122,7 @@ const studentNavItems: NavItem[] = [
   },
   
   {
-    icon: <PageIcon />,
+    icon: < MdLocalLibrary />,
     name: "Library",
     subItems: [
       { name: "Issue books", path: "/libpage", pro: false },
