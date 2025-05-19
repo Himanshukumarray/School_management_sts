@@ -22,7 +22,7 @@ type NavItem = {
   name: string;
   icon: React.ReactNode;
   path?: string;
-  subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
+  subItems?: { name: string; path: string; pro?: boolean; new?: boolean; roles?: string[] }[];
   roles?: string[]; // Add roles property to control visibility
 };
 
@@ -146,7 +146,7 @@ const othersItems: NavItem[] = [
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
-  const role = localStorage.getItem("userRole");
+  const role = sessionStorage.getItem("userRole");
 
   const [openSubmenu, setOpenSubmenu] = useState<{
     type: "main" | "others";
@@ -215,8 +215,8 @@ const AppSidebar: React.FC = () => {
   };
 
   // Filter sub-items by role
-  const filterSubItemsByRole = (subItems, itemRoles) => {
-    if (!subItems) return [];
+  const filterSubItemsByRole = (subItems?: { name: string; path: string; pro?: boolean; new?: boolean; roles?: string[] }[], itemRoles?: string[]) => {
+    if (!subItems || !role) return [];
     
     return subItems.filter(subItem => {
       // If the subItem has its own roles property, use that instead
@@ -231,7 +231,7 @@ const AppSidebar: React.FC = () => {
   const renderMenuItems = (items: NavItem[], menuType: "main" | "others") => {
     // Filter items by role
     const filteredItems = items.filter(item => {
-      return !item.roles || item.roles.includes(role);
+      return !item.roles || (role && item.roles.includes(role));
     });
 
     return (

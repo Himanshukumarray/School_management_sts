@@ -1,6 +1,8 @@
-import React, { useState, ChangeEvent } from "react";
+import React, { useState, useEffect, ChangeEvent } from "react";
+import axios from "axios";
 
 interface Book {
+  id: number;
   title: string;
   author: string;
   isbn: string;
@@ -11,119 +13,42 @@ interface Book {
   language: string;
   shelfNumber: string;
   totalCopies: number;
+  availableCopies: number;
   description: string;
+  purchaseDate: string;
+  subject: string;
 }
 
-const dummyBooks: Book[] = [
-  {
-    title: "Atomic Habits",
-    author: "James Clear",
-    isbn: "9780735211292",
-    bookCode: "B001",
-    edition: "1st",
-    publisher: "Penguin",
-    category: "Self-help",
-    language: "English",
-    shelfNumber: "S1",
-    totalCopies: 5,
-    description: "An easy and proven way to build good habits and break bad ones."
-  },
-  {
-    title: "Clean Code",
-    author: "Robert C. Martin",
-    isbn: "9780132350884",
-    bookCode: "B002",
-    edition: "1st",
-    publisher: "Prentice Hall",
-    category: "Programming",
-    language: "English",
-    shelfNumber: "S2",
-    totalCopies: 3,
-    description: "A Handbook of Agile Software Craftsmanship."
-  },
-  {
-    title: "The Pragmatic Programmer",
-    author: "Andy Hunt",
-    isbn: "9780201616224",
-    bookCode: "B003",
-    edition: "2nd",
-    publisher: "Addison-Wesley",
-    category: "Programming",
-    language: "English",
-    shelfNumber: "S3",
-    totalCopies: 4,
-    description: "Your journey to mastery."
-  },
-  {
-    title: "Deep Work",
-    author: "Cal Newport",
-    isbn: "9781455586691",
-    bookCode: "B004",
-    edition: "1st",
-    publisher: "Grand Central Publishing",
-    category: "Productivity",
-    language: "English",
-    shelfNumber: "S4",
-    totalCopies: 2,
-    description: "Rules for focused success in a distracted world."
-  },
-  {
-    title: "Introduction to Algorithms",
-    author: "Thomas H. Cormen",
-    isbn: "9780262033848",
-    bookCode: "B005",
-    edition: "3rd",
-    publisher: "MIT Press",
-    category: "Computer Science",
-    language: "English",
-    shelfNumber: "S5",
-    totalCopies: 6,
-    description: "Comprehensive guide to modern algorithm design."
-  },
-  {
-    title: "The Power of Habit",
-    author: "Charles Duhigg",
-    isbn: "9780812981605",
-    bookCode: "B006",
-    edition: "1st",
-    publisher: "Random House",
-    category: "Self-help",
-    language: "English",
-    shelfNumber: "S6",
-    totalCopies: 4,
-    description: "Why we do what we do in life and business."
-  },
-  {
-    title: "You Don't Know JS",
-    author: "Kyle Simpson",
-    isbn: "9781491904244",
-    bookCode: "B007",
-    edition: "1st",
-    publisher: "O'Reilly Media",
-    category: "Programming",
-    language: "English",
-    shelfNumber: "S7",
-    totalCopies: 3,
-    description: "A deep dive into JavaScript core mechanisms."
-  },
-  {
-    title: "Rich Dad Poor Dad",
-    author: "Robert T. Kiyosaki",
-    isbn: "9781612680194",
-    bookCode: "B008",
-    edition: "1st",
-    publisher: "Plata Publishing",
-    category: "Finance",
-    language: "English",
-    shelfNumber: "S8",
-    totalCopies: 7,
-    description: "What the rich teach their kids about money."
-  }
-];
-
 const BookListPage: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [books, setBooks] = useState<Book[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
+
+  useEffect(() => {
+    const fetchBooks = async () => {
+      try {
+        setLoading(true);
+       
+        const response = await axios.get("http://localhost:8080/api/library/books", {
+          headers: {
+            "tenant": sessionStorage.getItem('tenant') ,
+            'Authorization': 'Bearer ' + sessionStorage.getItem('token')
+          }
+        });
+        setBooks(response.data);
+        setError(null);
+      } catch (err) {
+        setError("Failed to fetch books. Please try again later.");
+        console.error("Error fetching books:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBooks();
+  }, []);
 
   const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -133,18 +58,18 @@ const BookListPage: React.FC = () => {
     setSelectedCategory(e.target.value);
   };
 
-  const filteredBooks = dummyBooks.filter((book) => {
+  const filteredBooks = books.filter((book) => {
     const searchLower = searchTerm.toLowerCase();
     const matchesSearch =
-      book.title.toLowerCase().includes(searchLower) ||
-      book.author.toLowerCase().includes(searchLower) ||
-      book.publisher.toLowerCase().includes(searchLower) ||
-      book.category.toLowerCase().includes(searchLower);
+      book.title?.toLowerCase().includes(searchLower) ||
+      book.author?.toLowerCase().includes(searchLower) ||
+      book.publisher?.toLowerCase().includes(searchLower) ||
+      book.category?.toLowerCase().includes(searchLower);
     const matchesCategory = selectedCategory ? book.category === selectedCategory : true;
     return matchesSearch && matchesCategory;
   });
 
-  const allCategories = Array.from(new Set(dummyBooks.map((book) => book.category)));
+  const allCategories = Array.from(new Set(books.map((book) => book.category))).filter(Boolean);
 
   return (
     <div className="max-w-6xl mx-auto p-6 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
@@ -171,26 +96,45 @@ const BookListPage: React.FC = () => {
         </select>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {filteredBooks.map((book, index) => (
-          <div key={index} className="border dark:border-gray-700 p-4 rounded shadow bg-white dark:bg-gray-800">
-            <h3 className="text-xl font-semibold mb-2">{book.title}</h3>
-            <p><strong>Author:</strong> {book.author}</p>
-            <p><strong>ISBN:</strong> {book.isbn}</p>
-            <p><strong>Book Code:</strong> {book.bookCode}</p>
-            <p><strong>Edition:</strong> {book.edition}</p>
-            <p><strong>Publisher:</strong> {book.publisher}</p>
-            <p><strong>Category:</strong> {book.category}</p>
-            <p><strong>Language:</strong> {book.language}</p>
-            <p><strong>Shelf:</strong> {book.shelfNumber}</p>
-            <p><strong>Copies Available:</strong> {book.totalCopies}</p>
-            <p className="mt-2"><strong>Description:</strong> {book.description}</p>
+      {loading ? (
+        <div className="flex justify-center items-center h-40">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        </div>
+      ) : error ? (
+        <div className="p-4 text-center text-red-500">
+          <p>{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Retry
+          </button>
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {filteredBooks.map((book) => (
+              <div key={book.id} className="border dark:border-gray-700 p-4 rounded shadow bg-white dark:bg-gray-800">
+                <h3 className="text-xl font-semibold mb-2">{book.title}</h3>
+                <p><strong>Author:</strong> {book.author}</p>
+                <p><strong>ISBN:</strong> {book.isbn}</p>
+                <p><strong>Book Code:</strong> {book.bookCode}</p>
+                <p><strong>Edition:</strong> {book.edition}</p>
+                <p><strong>Publisher:</strong> {book.publisher}</p>
+                <p><strong>Category:</strong> {book.category}</p>
+                <p><strong>Language:</strong> {book.language}</p>
+                <p><strong>Shelf:</strong> {book.shelfNumber}</p>
+                <p><strong>Total Copies:</strong> {book.totalCopies}</p>
+                <p><strong>Available Copies:</strong> {book.availableCopies}</p>
+                <p className="mt-2"><strong>Description:</strong> {book.description}</p>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
 
-      {filteredBooks.length === 0 && (
-        <p className="mt-4 text-red-500">No books found matching the search.</p>
+          {filteredBooks.length === 0 && (
+            <p className="mt-4 text-red-500">No books found matching the search.</p>
+          )}
+        </>
       )}
     </div>
   );
