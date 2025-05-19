@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
+
 
 import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "../../icons";
 import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import Checkbox from "../form/input/Checkbox";
 import Button from "../ui/button/Button";
+import axiosInstance from "../../axios/axiosinstance";
+
 export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
@@ -24,8 +26,8 @@ export default function SignInForm() {
     }
 
     try {
-      const response = await axios.post(
-        "http://localhost:8080/api/login",
+      const response = await axiosInstance.post(
+        "/login",
         {
           username: email,
           password: password,

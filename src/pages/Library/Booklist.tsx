@@ -1,5 +1,5 @@
 import React, { useState, useEffect, ChangeEvent } from "react";
-import axios from "axios";
+import axiosInstance from "../../axios/axiosinstance";
 
 interface Book {
   id: number;
@@ -31,7 +31,7 @@ const BookListPage: React.FC = () => {
       try {
         setLoading(true);
        
-        const response = await axios.get("http://localhost:8080/api/library/books", {
+        const response = await axiosInstance.get("/library/books", {
           headers: {
             "tenant": sessionStorage.getItem('tenant') ,
             'Authorization': 'Bearer ' + sessionStorage.getItem('token')
