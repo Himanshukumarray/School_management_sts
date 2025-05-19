@@ -221,13 +221,8 @@ const AppSidebar: React.FC = () => {
     });
   };
 
-  // Filter sub-items by role
-  const filterSubItemsByRole = (
-    subItems: { name: string; path: string; pro?: boolean; new?: boolean; roles?: string[] }[] | undefined,
-    itemRoles: string[] | undefined
-  ) => {
-    if (!subItems) return [];
-
+  const filterSubItemsByRole = (subItems?: { name: string; path: string; pro?: boolean; new?: boolean; roles?: string[] }[], itemRoles?: string[]) => {
+    if (!subItems || !role) return [];
     return subItems.filter(subItem => {
       // If the subItem has its own roles property, use that instead
       if (subItem.roles) {
@@ -241,7 +236,7 @@ const AppSidebar: React.FC = () => {
   const renderMenuItems = (items: NavItem[], menuType: "main" | "others") => {
     // Filter items by role
     const filteredItems = items.filter(item => {
-      return !item.roles || (role !== null && item.roles.includes(role));
+      return !item.roles || (role && item.roles.includes(role));
     });
 
     return (

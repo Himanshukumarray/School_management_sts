@@ -28,18 +28,14 @@ import StudentLeaveRequestForm from "./pages/StudentLeaveRequestForm";
 import FacultyAttendance from "./pages/FacultyAttendance";
 import AttendanceSummary from "./pages/AttendanceSummary";
 import SyllabusPage from "./pages/Syllabus";
-
 import LibraryIssuePage from "./pages/Library/Libpage";
 import Viewbooks from "./pages/Library/Viewbooks";
 import AddBookForm from "./pages/Library/Addbooks";
 import BookListPage from "./pages/Library/Booklist";
-
 // import StudentForm from "./pages/StudentForm";
 import StudentForm from "./pages/StudentForm";
 import TeacherForm from "./pages/TeacherForm";
-
 import ProtectedRoute from "./components/ProtectedRoute";
-
 import EmailComposer from "./pages/Dashboard/Mail";
 
 const App: React.FC = () => {
