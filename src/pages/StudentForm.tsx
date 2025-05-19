@@ -1,4 +1,5 @@
 import React, { useState, ChangeEvent, FormEvent } from 'react';
+import axios from 'axios';
 
 interface Student {
   studentAdmissionId: string;
@@ -42,23 +43,41 @@ const StudentForm: React.FC = () => {
   };
 
   const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    try {
-      const response = await fetch('http://localhost:8080/api/students', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-      if (response.ok) {
-        alert('Student added successfully!');
-        setFormData(initialState);
-      } else {
-        alert('Failed to add student.');
+  e.preventDefault();
+
+  const token = sessionStorage.getItem('token');
+  const tenant = sessionStorage.getItem('tenant');
+
+  if (!token || !tenant) {
+    alert('You are not authorized. Please log in first.');
+    return;
+  }
+
+  try {
+    const response = await axios.post(
+      'http://localhost:8080/api/students',
+      formData,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          'tenant': tenant, // ✅ fixed this
+        },
       }
-    } catch (error) {
-      console.error('Error:', error);
+    );
+
+    if (response.status === 200 || response.status === 201) {
+      alert('Teacher added successfully!');
+      setFormData(initialState);
+    } else {
+      alert(`Failed to add teacher. Status: ${response.status}`);
     }
-  };
+  } catch (error: any) {
+    console.error('Error:', error);
+    const message = error.response?.data?.message || error.message || 'Something went wrong.';
+    alert(`Error: ${message}`);
+  }
+};
 
   const fields = [
     { name: 'studentAdmissionId', label: 'Admission ID' },
@@ -93,7 +112,7 @@ const StudentForm: React.FC = () => {
               value={formData[field.name as keyof Student]}
               onChange={handleChange}
               className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-black text-black dark:text-white p-2 rounded"
-              required
+              // required
             />
           </div>
         ))}

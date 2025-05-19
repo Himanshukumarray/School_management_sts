@@ -1,4 +1,5 @@
 import React, { useState, ChangeEvent, FormEvent } from 'react';
+import axios from 'axios';
 
 interface Teacher {
   name: string;
@@ -8,7 +9,7 @@ interface Teacher {
   phone: string;
   address: string;
   password: string;
-  tenantId: string;
+   tenantId: string;
 }
 
 const initialState: Teacher = {
@@ -29,24 +30,46 @@ const TeacherForm: React.FC = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    try {
-      const response = await fetch('http://localhost:8080/api/teachers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-      if (response.ok) {
-        alert('Teacher added successfully!');
-        setFormData(initialState);
-      } else {
-        alert('Failed to add teacher.');
+const handleSubmit = async (e: FormEvent) => {
+  e.preventDefault();
+
+  const token = sessionStorage.getItem('token');
+  const tenant = sessionStorage.getItem('tenant');
+
+  if (!token || !tenant) {
+    alert('You are not authorized. Please log in first.');
+    return;
+  }
+
+  try {
+    const response = await axios.post(
+      'http://localhost:8080/api/teachers',
+      formData,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          'tenant': tenant, // ✅ fixed this
+        },
       }
-    } catch (error) {
-      console.error('Error:', error);
+    );
+
+    if (response.status === 200 || response.status === 201) {
+      alert('Teacher added successfully!');
+      setFormData(initialState);
+    } else {
+      alert(`Failed to add teacher. Status: ${response.status}`);
     }
-  };
+  } catch (error: any) {
+    console.error('Error:', error);
+    const message = error.response?.data?.message || error.message || 'Something went wrong.';
+    alert(`Error: ${message}`);
+  }
+};
+
+
+
+
 
   const fields = [
     { name: 'name', label: 'Name' },

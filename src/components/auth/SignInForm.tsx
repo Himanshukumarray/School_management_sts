@@ -39,12 +39,12 @@ export default function SignInForm() {
 
       const { jwt, role, name, empId } = response.data;
 
-      // Store values in localStorage
-      localStorage.setItem("token", jwt);
-      localStorage.setItem("userRole", role);
-      localStorage.setItem("userName", name);
-      localStorage.setItem("userId", empId);
-      localStorage.setItem("tenant", tenant);
+      // Store values in sessionStorage
+      sessionStorage.setItem("token", jwt);
+      sessionStorage.setItem("userRole", role);
+      sessionStorage.setItem("userName", name);
+      sessionStorage.setItem("userId", empId);
+      sessionStorage.setItem("tenant", tenant);
 
       alert("Login successful!");
       navigate("/");
