@@ -7,7 +7,6 @@ import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import Checkbox from "../form/input/Checkbox";
 import Button from "../ui/button/Button";
-
 export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
@@ -41,7 +40,6 @@ export default function SignInForm() {
 
       const { jwt, role, name, empId } = response.data;
 
-     
       sessionStorage.setItem("token", jwt);
       sessionStorage.setItem("userRole", role);
       sessionStorage.setItem("userName", name);
@@ -125,7 +123,6 @@ export default function SignInForm() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="info@gmail.com"
-                 
                 />
               </div>
 
@@ -139,7 +136,7 @@ export default function SignInForm() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"
-                   
+
                   />
                   <span
                     onClick={() => setShowPassword(!showPassword)}
@@ -170,9 +167,9 @@ export default function SignInForm() {
               </div>
 
               {error && <p className="text-sm text-error-500">{error}</p>}
-
               <Button className="w-full py-1 px-2 text-sm">
                Sign in
+
               </Button>
             </div>
           </form>

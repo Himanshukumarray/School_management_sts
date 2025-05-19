@@ -3,18 +3,19 @@ import { Link, useLocation } from "react-router";
 
 // Assume these icons are imported from an icon library
 import {
-  BoxCubeIcon,
   CalenderIcon,
   ChevronDownIcon,
   GridIcon,
   HorizontaLDots,
   ListIcon,
   PageIcon,
-  PieChartIcon,
   PlugInIcon,
   TableIcon,
   UserCircleIcon,
 } from "../icons";
+import { GiArchiveRegister } from "react-icons/gi";
+import { MdLocalLibrary } from "react-icons/md";
+
 import { useSidebar } from "../context/SidebarContext";
 import SidebarWidget from "./SidebarWidget";
 
@@ -73,7 +74,7 @@ const adminNavItems: NavItem[] = [
     roles: ["admin", "superadmin"],
   },
   {
-    icon: <PageIcon />,
+    icon: < MdLocalLibrary />,
     name: "Library",
     subItems: [
       { name: "Issue books", path: "/libpage", pro: false },
@@ -88,6 +89,15 @@ const adminNavItems: NavItem[] = [
     icon: <TableIcon />,
     subItems: [{ name: "Syllabus", path: "/SyllabusPage", pro: false }],
     roles: ["admin", "student", "teacher", "superadmin"],
+  },
+  {
+    icon: <GiArchiveRegister />,
+    name: "Register",
+    subItems: [
+      { name: "Add Student", path: "/student-form", pro: false },
+      { name: "Add Teacher", path: "/teacher-form", pro: false },
+    ],
+    roles: ["admin", "superadmin"],
   },
 ];
 
@@ -108,16 +118,9 @@ const studentNavItems: NavItem[] = [
     name: "User Profile",
     path: "/profile",
   },
+  
   {
-    name: "Student",
-    icon: <PageIcon />,
-    subItems: [
-      { name: "Student Page", path: "/StudentPage", pro: false },
-      { name: "Leave Request", path: "/StudentLeaveRequestForm", pro: false },
-    ],
-  },
-  {
-    icon: <PageIcon />,
+    icon: < MdLocalLibrary />,
     name: "Library",
     subItems: [
       { name: "Issue books", path: "/libpage", pro: false },
@@ -130,8 +133,12 @@ const studentNavItems: NavItem[] = [
     icon: <TableIcon />,
     subItems: [{ name: "Syllabus", path: "/SyllabusPage", pro: false }],
   },
+
+  
+
 ];
 
+// Other navigation items
 const othersItems: NavItem[] = [
   {
     icon: <PlugInIcon />,
@@ -214,17 +221,15 @@ const AppSidebar: React.FC = () => {
     });
   };
 
-  // Filter sub-items by role
   const filterSubItemsByRole = (subItems?: { name: string; path: string; pro?: boolean; new?: boolean; roles?: string[] }[], itemRoles?: string[]) => {
     if (!subItems || !role) return [];
-    
     return subItems.filter(subItem => {
       // If the subItem has its own roles property, use that instead
       if (subItem.roles) {
-        return subItem.roles.includes(role);
+        return role !== null && subItem.roles.includes(role);
       }
       // Otherwise, use the parent item's roles
-      return !itemRoles || itemRoles.includes(role);
+      return !itemRoles || (role !== null && itemRoles.includes(role));
     });
   };
 
@@ -239,7 +244,7 @@ const AppSidebar: React.FC = () => {
         {filteredItems.map((nav, index) => {
           // Filter sub-items by role
           const filteredSubItems = filterSubItemsByRole(nav.subItems, nav.roles);
-          
+
           // Skip rendering if there are no sub-items after filtering
           if (nav.subItems && filteredSubItems.length === 0) {
             return null;
@@ -251,8 +256,8 @@ const AppSidebar: React.FC = () => {
                 <button
                   onClick={() => handleSubmenuToggle(index, menuType)}
                   className={`menu-item group ${openSubmenu?.type === menuType && openSubmenu?.index === index
-                      ? "menu-item-active"
-                      : "menu-item-inactive"
+                    ? "menu-item-active"
+                    : "menu-item-inactive"
                     } cursor-pointer ${!isExpanded && !isHovered
                       ? "lg:justify-center"
                       : "lg:justify-start"
@@ -260,8 +265,8 @@ const AppSidebar: React.FC = () => {
                 >
                   <span
                     className={`menu-item-icon-size  ${openSubmenu?.type === menuType && openSubmenu?.index === index
-                        ? "menu-item-icon-active"
-                        : "menu-item-icon-inactive"
+                      ? "menu-item-icon-active"
+                      : "menu-item-icon-inactive"
                       }`}
                   >
                     {nav.icon}
@@ -272,9 +277,9 @@ const AppSidebar: React.FC = () => {
                   {(isExpanded || isHovered || isMobileOpen) && (
                     <ChevronDownIcon
                       className={`ml-auto w-5 h-5 transition-transform duration-200 ${openSubmenu?.type === menuType &&
-                          openSubmenu?.index === index
-                          ? "rotate-180 text-brand-500"
-                          : ""
+                        openSubmenu?.index === index
+                        ? "rotate-180 text-brand-500"
+                        : ""
                         }`}
                     />
                   )}
@@ -288,8 +293,8 @@ const AppSidebar: React.FC = () => {
                   >
                     <span
                       className={`menu-item-icon-size ${isActive(nav.path)
-                          ? "menu-item-icon-active"
-                          : "menu-item-icon-inactive"
+                        ? "menu-item-icon-active"
+                        : "menu-item-icon-inactive"
                         }`}
                     >
                       {nav.icon}
@@ -319,8 +324,8 @@ const AppSidebar: React.FC = () => {
                         <Link
                           to={subItem.path}
                           className={`menu-dropdown-item ${isActive(subItem.path)
-                              ? "menu-dropdown-item-active"
-                              : "menu-dropdown-item-inactive"
+                            ? "menu-dropdown-item-active"
+                            : "menu-dropdown-item-inactive"
                             }`}
                         >
                           {subItem.name}
@@ -328,8 +333,8 @@ const AppSidebar: React.FC = () => {
                             {subItem.new && (
                               <span
                                 className={`ml-auto ${isActive(subItem.path)
-                                    ? "menu-dropdown-badge-active"
-                                    : "menu-dropdown-badge-inactive"
+                                  ? "menu-dropdown-badge-active"
+                                  : "menu-dropdown-badge-inactive"
                                   } menu-dropdown-badge`}
                               >
                                 new
@@ -338,8 +343,8 @@ const AppSidebar: React.FC = () => {
                             {subItem.pro && (
                               <span
                                 className={`ml-auto ${isActive(subItem.path)
-                                    ? "menu-dropdown-badge-active"
-                                    : "menu-dropdown-badge-inactive"
+                                  ? "menu-dropdown-badge-active"
+                                  : "menu-dropdown-badge-inactive"
                                   } menu-dropdown-badge`}
                               >
                                 pro
@@ -429,8 +434,8 @@ const AppSidebar: React.FC = () => {
             <div>
               <h2
                 className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${!isExpanded && !isHovered
-                    ? "lg:justify-center"
-                    : "justify-start"
+                  ? "lg:justify-center"
+                  : "justify-start"
                   }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? (
@@ -444,8 +449,8 @@ const AppSidebar: React.FC = () => {
             <div className="">
               <h2
                 className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${!isExpanded && !isHovered
-                    ? "lg:justify-center"
-                    : "justify-start"
+                  ? "lg:justify-center"
+                  : "justify-start"
                   }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? (

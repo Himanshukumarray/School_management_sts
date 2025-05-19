@@ -22,7 +22,6 @@ import TeacherPage from "./pages/teacher-page";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
-
 import AttendancePage from "./pages/AttendancePage";
 import TeacherAttendance from "./pages/TeacherAttendancePage";
 import StudentLeaveRequestForm from "./pages/StudentLeaveRequestForm";
@@ -33,6 +32,9 @@ import LibraryIssuePage from "./pages/Library/Libpage";
 import Viewbooks from "./pages/Library/Viewbooks";
 import AddBookForm from "./pages/Library/Addbooks";
 import BookListPage from "./pages/Library/Booklist";
+// import StudentForm from "./pages/StudentForm";
+import StudentForm from "./pages/StudentForm";
+import TeacherForm from "./pages/TeacherForm";
 import ProtectedRoute from "./components/ProtectedRoute";
 import EmailComposer from "./pages/Dashboard/Mail";
 
@@ -43,7 +45,7 @@ const App: React.FC = () => {
       <Routes>
         <Route element={<AppLayout />}>
           <Route index path="/" element={<Home />} />
-          <Route index path="/mail" element={<EmailComposer/>} />
+          <Route index path="/mail" element={<EmailComposer />} />
 
           {/* Open to All Roles */}
           <Route path="/profile" element={<UserProfiles />} />
@@ -143,6 +145,24 @@ const App: React.FC = () => {
             }
           />
           <Route
+            path="/student-form"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <StudentForm  />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/teacher-form"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <TeacherForm  />
+              </ProtectedRoute>
+            }
+          />
+          {/* <Route path="/teacher-form" element={<TeacherForm />} /> */}
+
+          <Route
             path="/booklist"
             element={
               <ProtectedRoute allowedRoles={["student", "admin"]}>
@@ -166,6 +186,7 @@ const App: React.FC = () => {
 
         {/* Auth Routes */}
         <Route path="/signin" element={<SignIn />} />
+
         <Route path="/signup" element={<SignUp />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
 
