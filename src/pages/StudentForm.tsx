@@ -6,6 +6,7 @@ interface Student {
   studentClassRollNo: string;
   admissionDate: string;
   name: string;
+  dob : string;
   email: string;
   password: string;
   address: string;
@@ -15,7 +16,6 @@ interface Student {
   parentName: string;
   parentMobile: string;
   parentEmail: string;
-  tenantId: string;
 }
 
 const initialState: Student = {
@@ -23,6 +23,7 @@ const initialState: Student = {
   studentClassRollNo: '',
   admissionDate: '',
   name: '',
+  dob: '',
   email: '',
   password: '',
   address: '',
@@ -32,7 +33,6 @@ const initialState: Student = {
   parentName: '',
   parentMobile: '',
   parentEmail: '',
-  tenantId: '',
 };
 
 const StudentForm: React.FC = () => {
@@ -67,10 +67,10 @@ const StudentForm: React.FC = () => {
     );
 
     if (response.status === 200 || response.status === 201) {
-      alert('Teacher added successfully!');
+      alert('Student added successfully!');
       setFormData(initialState);
     } else {
-      alert(`Failed to add teacher. Status: ${response.status}`);
+      alert(`Failed to add Student. Status: ${response.status}`);
     }
   } catch (error: any) {
     console.error('Error:', error);
@@ -84,16 +84,16 @@ const StudentForm: React.FC = () => {
     { name: 'studentClassRollNo', label: 'Class Roll No' },
     { name: 'admissionDate', label: 'Admission Date', type: 'date' },
     { name: 'name', label: 'Name' },
+    { name: 'dob', label: 'DOB',type: 'date' },
     { name: 'email', label: 'Email', type: 'email' },
-    { name: 'password', label: 'Password', type: 'password' },
     { name: 'address', label: 'Address' },
     { name: 'mobile', label: 'Mobile' },
-    { name: 'parentRelation', label: 'Parent Relation' },
     { name: 'currentClass', label: 'Current Class' },
+    { name: 'password', label: 'Password', type: 'password' },
     { name: 'parentName', label: 'Parent Name' },
+    { name: 'parentRelation', label: 'Parent Relation' },
     { name: 'parentMobile', label: 'Parent Mobile' },
     { name: 'parentEmail', label: 'Parent Email' },
-    { name: 'tenantId', label: 'Tenant ID' },
   ];
 
   return (
