@@ -1,157 +1,212 @@
 import React, { useState, useEffect } from 'react';
+import { User, Calendar, CheckCircle, Clock } from 'lucide-react';
+import axiosInstance from '../axios/axiosinstance';
 
-type Teacher = {
-  id: string;
-  name: string;
-  photo: string;
-  branch: string;
-};
-
-type AttendanceRecord = {
+interface AttendanceRecord {
+  id: number;
+  teacherId: number;
   date: string;
-  punchIn: string;
-  punchOut: string;
-};
+  status: string;
+}
 
-const dummyTeachers: Teacher[] = [
-  {
-    id: 'T001',
-    name: 'Rohan Sharma',
-    photo: 'https://randomuser.me/api/portraits/men/1.jpg',
-    branch: 'Science',
-  },
-  {
-    id: 'T002',
-    name: 'Priya Verma',
-    photo: 'https://randomuser.me/api/portraits/women/2.jpg',
-    branch: 'Arts',
-  },
-  {
-    id: 'T003',
-    name: 'Arjun Singh',
-    photo: 'https://randomuser.me/api/portraits/men/3.jpg',
-    branch: 'Commerce',
-  },
-];
+const TeacherAttendance: React.FC = () => {
+  const [records, setRecords] = useState<AttendanceRecord[]>([]);
+  const [isMarked, setIsMarked] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [teacherName, setTeacherName] = useState('Sarah Johnson');
+  const [teacherId, setTeacherId] = useState<number | null>(1);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
-const dummyAttendance: Record<string, AttendanceRecord[]> = {
-  T001: [
-    { date: '2025-04-01', punchIn: '09:00 AM', punchOut: '05:00 PM' },
-    { date: '2025-04-02', punchIn: '09:10 AM', punchOut: '05:15 PM' },
-  ],
-  T002: [
-    { date: '2025-04-01', punchIn: '09:05 AM', punchOut: '05:00 PM' },
-    { date: '2025-04-02', punchIn: '09:00 AM', punchOut: '05:10 PM' },
-  ],
-  T003: [
-    { date: '2025-04-01', punchIn: '08:50 AM', punchOut: '04:55 PM' },
-    { date: '2025-04-02', punchIn: '09:00 AM', punchOut: '05:05 PM' },
-  ],
-};
+  const today = new Date().toISOString().split('T')[0];
 
-const PunchInPage: React.FC = () => {
-  const fixedTeacherId = 'T001'; // Change this to T002 or T003 as needed
-  const selectedTeacher = dummyTeachers.find((t) => t.id === fixedTeacherId)!;
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
-  const [attendanceStatus, setAttendanceStatus] = useState<AttendanceRecord[]>(
-    dummyAttendance[fixedTeacherId] || []
-  );
-  const [punchInTime, setPunchInTime] = useState('');
-  const [punchOutTime, setPunchOutTime] = useState('');
+  useEffect(() => {
+    const storedTeacherId = sessionStorage.getItem('userId');
+    const storedTeacherName = sessionStorage.getItem('userName');
+    
+    if (storedTeacherId) {
+      setTeacherId(parseInt(storedTeacherId));
+    }
+    if (storedTeacherName) {
+      setTeacherName(storedTeacherName);
+    }
 
-  const handlePunchIn = () => {
-    const time = new Date().toLocaleTimeString();
-    setPunchInTime(time);
-    setAttendanceStatus((prev) => [
-      ...prev,
-      { date: new Date().toLocaleDateString(), punchIn: time, punchOut: '' },
-    ]);
-  };
+    checkTodayAttendance();
+    fetchAttendanceRecords();
+  }, [teacherId]);
 
-  const handlePunchOut = () => {
-    if (punchInTime) {
-      const time = new Date().toLocaleTimeString();
-      setPunchOutTime(time);
-      const updated = [...attendanceStatus];
-      updated[updated.length - 1].punchOut = time;
-      setAttendanceStatus(updated);
+  const getHeaders = () => ({
+    'tenant': sessionStorage.getItem('tenant') || '',
+    'Authorization': 'Bearer ' + sessionStorage.getItem('token'),
+    'Content-Type': 'application/json'
+  });
+
+  const checkTodayAttendance = () => {
+    if (!teacherId) return;
+    
+    const storedRecords = sessionStorage.getItem('attendanceRecords');
+    if (storedRecords) {
+      const parsed = JSON.parse(storedRecords);
+      const todayRecord = parsed.find((r: AttendanceRecord) => 
+        r.date === today && r.teacherId === teacherId
+      );
+      setIsMarked(!!todayRecord);
     }
   };
 
+  const fetchAttendanceRecords = () => {
+    if (!teacherId) return;
+    
+    try {
+      const storedRecords = sessionStorage.getItem('attendanceRecords');
+      if (storedRecords) {
+        const parsed = JSON.parse(storedRecords);
+        setRecords(parsed.filter((r: AttendanceRecord) => r.teacherId === teacherId));
+      }
+    } catch (error) {
+      console.error('Error fetching records:', error);
+    }
+  };
+
+  const markAttendance = async () => {
+    if (!teacherId || isMarked || loading) return;
+
+    setLoading(true);
+    try {
+      await axiosInstance.post(
+        `/attendance/mark?teacherId=${teacherId}&status=Present&date=${today}`,
+        {},
+        {
+          headers: getHeaders()
+        }
+      );
+      setIsMarked(true);
+    } catch (error) {
+      console.error('Error marking attendance:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatDate = (date: string | Date) => {
+    return new Date(date).toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  };
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString('en-US', { 
+      hour12: true, 
+      hour: '2-digit', 
+      minute: '2-digit'
+    });
+  };
+
   return (
-    <div className="bg-slate-100 dark:bg-gray-900 min-h-screen py-10 px-6">
-      <h2 className="text-3xl font-bold text-center text-gray-800 dark:text-white mb-8">
-        Teacher Punch In Page
-      </h2>
-
-      <div className="flex flex-col md:flex-row gap-6 mb-8 items-start">
-        <div className="flex items-center gap-6 md:w-2/3">
-          <img
-            src={selectedTeacher.photo}
-            alt={selectedTeacher.name}
-            className="w-32 h-32 rounded-full object-cover shadow-md"
-          />
-          <div>
-            <h3 className="text-xl font-semibold text-gray-800 dark:text-white">
-              {selectedTeacher.name}
-            </h3>
-            <p className="text-gray-600 dark:text-gray-300">ID: {selectedTeacher.id}</p>
-            <p className="text-gray-600 dark:text-gray-300">Branch: {selectedTeacher.branch}</p>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-2xl mx-auto p-6">
+        {/* Enhanced Header */}
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 mb-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
+                  <User className="w-8 h-8 text-white" />
+                </div>
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center shadow-md">
+                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                </div>
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 mb-1">
+                  Welcome back, {teacherName}
+                </h1>
+                <p className="text-gray-600 flex items-center space-x-2">
+                  <Clock className="w-4 h-4" />
+                  <span>{formatTime(currentTime)}</span>
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="flex flex-col items-center md:items-start gap-2 md:w-1/3">
-          <div className="flex gap-4">
-            <button
-              onClick={handlePunchIn}
-              className="w-32 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-md"
-            >
-              Punch In
-            </button>
-            <button
-              onClick={handlePunchOut}
-              className="w-32 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md"
-            >
-              Punch Out
-            </button>
+        {/* Main Attendance Card */}
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
+          <div className="flex items-center space-x-3 mb-6">
+            <div className="w-10 h-10 bg-purple-500 rounded-xl flex items-center justify-center">
+              <Calendar className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">
+                Today's Attendance
+              </h2>
+              <p className="text-gray-600 text-sm">
+                {formatDate(today)}
+              </p>
+            </div>
           </div>
-          <div className="text-sm text-gray-700 dark:text-gray-300 text-center md:text-left">
-            {punchInTime && <p>Punched In at: {punchInTime}</p>}
-            {punchOutTime && <p>Punched Out at: {punchOutTime}</p>}
-          </div>
-        </div>
-      </div>
 
-      <div>
-        <h3 className="mb-3 text-lg font-semibold text-gray-800 dark:text-white">
-          Attendance Records
-        </h3>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left border border-gray-200 dark:border-gray-600">
-            <thead className="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
-              <tr>
-                <th className="p-2 border">Date</th>
-                <th className="p-2 border">Punch In</th>
-                <th className="p-2 border">Punch Out</th>
-              </tr>
-            </thead>
-            <tbody>
-              {attendanceStatus.map((record, index) => (
-                <tr
-                  key={index}
-                  className="odd:bg-white even:bg-gray-50 dark:odd:bg-gray-800 dark:even:bg-gray-700"
-                >
-                  <td className="p-2 border dark:border-gray-600">{record.date}</td>
-                  <td className="p-2 border dark:border-gray-600">{record.punchIn}</td>
-                  <td className="p-2 border dark:border-gray-600">{record.punchOut}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          {isMarked ? (
+            <div className="text-center py-8">
+              <div className="w-20 h-20 bg-blue-500 rounded-full mx-auto mb-4 flex items-center justify-center shadow-lg">
+                <CheckCircle className="w-10 h-10 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                Attendance Marked Successfully!
+              </h3>
+              <p className="text-gray-600 mb-4">
+                Thank you for marking your attendance today
+              </p>
+              <div className="inline-flex items-center space-x-2 bg-green-50 text-green-700 px-4 py-2 rounded-full text-sm">
+                <CheckCircle className="w-4 h-4" />
+                <span>Present for today</span>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <div className="w-20 h-20 bg-blue-500 rounded-full mx-auto mb-6 flex items-center justify-center shadow-lg">
+                <User className="w-10 h-10 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                Ready to mark attendance?
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Click the button below to record your presence for today
+              </p>
+              <button
+                onClick={markAttendance}
+                disabled={loading}
+                className={`
+                  relative overflow-hidden px-8 py-4 rounded-2xl text-white font-semibold text-lg
+                  transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-300
+                  ${loading 
+                    ? 'bg-gray-400 cursor-not-allowed' 
+                    : 'bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-xl'
+                  }
+                `}
+              >
+                {loading && (
+                  <div className="absolute inset-0 bg-blue-600 flex items-center justify-center">
+                    <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                )}
+                <span className={loading ? 'opacity-0' : 'opacity-100'}>
+                  Mark My Attendance
+                </span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 };
 
-export default PunchInPage;
+export default TeacherAttendance;

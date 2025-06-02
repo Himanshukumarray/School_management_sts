@@ -8,7 +8,7 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles }) => {
     const userRole = sessionStorage.getItem("userRole");
-
+    
     if (!userRole || !allowedRoles.includes(userRole)) {
       return <Navigate to="/unauthorized" replace />;
     }

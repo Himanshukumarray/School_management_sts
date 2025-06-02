@@ -1,315 +1,337 @@
-import { useState, useRef, useEffect } from "react";
-import FullCalendar from "@fullcalendar/react";
-import dayGridPlugin from "@fullcalendar/daygrid";
-import timeGridPlugin from "@fullcalendar/timegrid";
-import interactionPlugin from "@fullcalendar/interaction";
-import { EventInput, DateSelectArg, EventClickArg } from "@fullcalendar/core";
-import { Modal } from "../components/ui/modal";
-import { useModal } from "../hooks/useModal";
-import PageMeta from "../components/common/PageMeta";
+import React, { useState, useEffect } from 'react';
 
-interface CalendarEvent extends EventInput {
-  extendedProps: {
-    calendar: string;
-  };
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import interactionPlugin, {
+  DateClickArg,
+} from '@fullcalendar/interaction';
+import axiosInstance from '../axios/axiosinstance';
+import { EventClickArg } from '@fullcalendar/core/index.js';
+
+interface EventData {
+  id?: number;
+  heading: string;
+  subject: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  createdByTeacherId: number;
+  status: string;
 }
 
 const Calendar: React.FC = () => {
-  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
-    null
-  );
-  const [eventTitle, setEventTitle] = useState("");
-  const [eventStartDate, setEventStartDate] = useState("");
-  const [eventEndDate, setEventEndDate] = useState("");
-  const [eventLevel, setEventLevel] = useState("");
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
-  const calendarRef = useRef<FullCalendar>(null);
-  const { isOpen, openModal, closeModal } = useModal();
+  const [events, setEvents] = useState<any[]>([]);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [formData, setFormData] = useState<EventData>({
+    heading: '',
+    subject: '',
+    description: '',
+    startDate: '',
+    endDate: '',
+    createdByTeacherId: sessionStorage.getItem('userId') ? Number(sessionStorage.getItem('userId')) : 1,
+    status: 'Upcoming',
+  });
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const calendarsEvents = {
-    Holiday: "bg-red-500",
-    PTM: "bg-green-500",
-    Exams: "bg-blue-500",
-    Events: "bg-yellow-500",
-  };
-  
-
-  // useEffect(() => {
-  //   setEvents([
-  //     {
-  //       id: "1",
-  //       title: "Diwali Holiday",
-  //       start: new Date().toISOString().split("T")[0],
-  //       extendedProps: { calendar: "Holiday" },
-  //     },
-  //     {
-  //       id: "2",
-  //       title: "Parent-Teacher Meeting",
-  //       start: new Date(Date.now() + 86400000).toISOString().split("T")[0],
-  //       extendedProps: { calendar: "PTM" },
-  //     },
-  //     {
-  //       id: "3",
-  //       title: "Final Exams",
-  //       start: new Date(Date.now() + 172800000).toISOString().split("T")[0],
-  //       end: new Date(Date.now() + 259200000).toISOString().split("T")[0],
-  //       extendedProps: { calendar: "Exams" },
-  //     },
-  //   ]);
-  // }, []);
-  
-
-  const handleDateSelect = (selectInfo: DateSelectArg) => {
-    resetModalFields();
-    setEventStartDate(selectInfo.startStr);
-    setEventEndDate(selectInfo.endStr || selectInfo.startStr);
-    openModal();
-  };
-
-  const handleEventClick = (clickInfo: EventClickArg) => {
-    const event = clickInfo.event;
-    setSelectedEvent(event as unknown as CalendarEvent);
-    setEventTitle(event.title);
-    setEventStartDate(event.start?.toISOString().split("T")[0] || "");
-    setEventEndDate(event.end?.toISOString().split("T")[0] || "");
-    setEventLevel(event.extendedProps.calendar);
-    openModal();
-  };
-
-  const handleAddOrUpdateEvent = () => {
-    if (selectedEvent) {
-      // Update existing event
-      setEvents((prevEvents) =>
-        prevEvents.map((event) =>
-          event.id === selectedEvent.id
-            ? {
-                ...event,
-                title: eventTitle,
-                start: eventStartDate,
-                end: eventEndDate,
-                extendedProps: { calendar: eventLevel },
-              }
-            : event
-        )
-      );
-    } else {
-      // Add new event
-      const newEvent: CalendarEvent = {
-        id: Date.now().toString(),
-        title: eventTitle,
-        start: eventStartDate,
-        end: eventEndDate,
-        allDay: true,
-        extendedProps: { calendar: eventLevel },
-      };
-      setEvents((prevEvents) => [...prevEvents, newEvent]);
+  // Fetch events from API
+  const fetchEvents = async () => {
+    setIsLoading(true);
+    try {
+      const res = await axiosInstance.get('/events/status/Upcoming', {
+        headers: {
+          tenant: sessionStorage.getItem('tenant'),
+          Authorization: 'Bearer ' + sessionStorage.getItem('token'),
+        }
+      });
+      const mapped = res.data.map((event: EventData) => ({
+        id: event.id,
+        title: event.heading,
+        start: event.startDate,
+        end: event.endDate,
+      }));
+      setEvents(mapped);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+    } finally {
+      setIsLoading(false);
     }
-    closeModal();
-    resetModalFields();
   };
 
-  const resetModalFields = () => {
-    setEventTitle("");
-    setEventStartDate("");
-    setEventEndDate("");
-    setEventLevel("");
-    setSelectedEvent(null);
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+ const role = sessionStorage.getItem('userRole');
+
+
+  const handleDateClick = (arg: DateClickArg) => {
+    setFormData({
+      heading: '',
+      subject: '',
+      description: '',
+      startDate: arg.dateStr,
+      endDate: arg.dateStr,
+      createdByTeacherId: 1,
+      status: 'Upcoming',
+    });
+    setEditingId(null);
+    setModalOpen(true);
+  };
+
+ const handleEventClick = async (clickInfo: EventClickArg) => {
+  const id = Number(clickInfo.event.id);
+  setIsLoading(true);
+  const teacherId = sessionStorage.getItem('userId'); 
+
+  if (!teacherId) {
+    console.error('No teacherId found in sessionStorage');
+    setIsLoading(false);
+    return;
+  }
+
+  try {
+    const res = await axiosInstance.get(`/events/teacher/${teacherId}`, { 
+      headers: {
+        tenant: sessionStorage.getItem('tenant') || '',
+        Authorization: 'Bearer ' + sessionStorage.getItem('token'),
+      } 
+    });
+
+    const event = res.data.find((e: EventData) => e.id === id);
+    if (event) {
+      setFormData(event);
+      setEditingId(id);
+      setModalOpen(true);
+    }
+  } catch (error) {
+    console.error('Error fetching event details:', error);
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+
+  const handleSubmit = async () => {
+    setIsLoading(true);
+    try {
+      if (editingId) {
+        await axiosInstance.put(`/events/${editingId}`, formData, {
+          headers: {
+            tenant: sessionStorage.getItem('tenant'),
+            Authorization: 'Bearer ' + sessionStorage.getItem('token'),
+          } 
+        });
+      } else {
+        await axiosInstance.post('/events', formData, {
+          headers: {
+            tenant: sessionStorage.getItem('tenant'),
+            Authorization: 'Bearer ' + sessionStorage.getItem('token'),
+          } 
+        });
+      }
+      setModalOpen(false);
+      fetchEvents();
+    } catch (error) {
+      console.error('Error saving event:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (editingId) {
+      setIsLoading(true);
+      try {
+        await axiosInstance.delete(`/events/${editingId}`, { 
+          headers: {
+            tenant: sessionStorage.getItem('tenant'),
+            Authorization: 'Bearer ' + sessionStorage.getItem('token'),
+          } 
+        });
+        setModalOpen(false);
+        fetchEvents();
+      } catch (error) {
+        console.error('Error deleting event:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
   };
 
   return (
-    <>
-      <PageMeta
-        title="React.js Calendar Dashboard | TailAdmin - Next.js Admin Dashboard Template"
-        description="This is React.js Calendar Dashboard page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
-      />
-      <div className="rounded-2xl border  border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
-        <div className="custom-calendar">
-        <div className="p-4">
-  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Event Types:</h4>
-  <div className="flex flex-wrap gap-4">
-    <div className="flex items-center gap-2">
-      <span className="w-4 h-4 rounded-full bg-red-500"></span>
-      <span className="text-sm text-gray-600 dark:text-gray-300">Holiday</span>
-    </div>
-    <div className="flex items-center gap-2">
-      <span className="w-4 h-4 rounded-full bg-green-500"></span>
-      <span className="text-sm text-gray-600 dark:text-gray-300">PTM</span>
-    </div>
-    <div className="flex items-center gap-2">
-      <span className="w-4 h-4 rounded-full bg-blue-500"></span>
-      <span className="text-sm text-gray-600 dark:text-gray-300">Exams</span>
-    </div>
-    <div className="flex items-center gap-2">
-      <span className="w-4 h-4 rounded-full bg-yellow-500"></span>
-      <span className="text-sm text-gray-600 dark:text-gray-300">Events</span>
-    </div>
-  </div>
-</div>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Navigation Bar */}
+      <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                School Calendar
+              </h1>
+            </div>
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                Academic Events & Schedules
+              </span>
+            </div>
+          </div>
+        </div>
+      </nav>
 
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+          {isLoading && (
+            <div className="absolute inset-0 bg-white/80 dark:bg-gray-800/80 z-40 flex items-center justify-center">
+              <div className="flex items-center space-x-2">
+                <div className="w-5 h-5 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
+                <span className="text-gray-600 dark:text-gray-400">Loading...</span>
+              </div>
+            </div>
+          )}
+          
           <FullCalendar
-            ref={calendarRef}
-            plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+            plugins={[dayGridPlugin, interactionPlugin]}
             initialView="dayGridMonth"
-            headerToolbar={{
-              left: "prev,next addEventButton",
-              center: "title",
-              right: "dayGridMonth,timeGridWeek,timeGridDay",
-            }}
             events={events}
-            selectable={true}
-            select={handleDateSelect}
+            dateClick={handleDateClick}
             eventClick={handleEventClick}
-            eventContent={renderEventContent}
-            customButtons={{
-              addEventButton: {
-                text: "Add Event +",
-                click: openModal,
-              },
+            height="auto"
+            headerToolbar={{
+              left: 'prev,next today',
+              center: 'title',
+              right: 'dayGridMonth'
             }}
           />
         </div>
-        <Modal
-          isOpen={isOpen}
-          onClose={closeModal}
-          className="max-w-[700px] p-6 lg:p-10"
-        >
-          <div className="flex flex-col px-2 overflow-y-auto custom-scrollbar">
-            <div>
-              <h5 className="mb-2 font-semibold text-gray-800 modal-title text-theme-xl dark:text-white/90 lg:text-2xl">
-                {selectedEvent ? "Edit Event" : "Add Event"}
-              </h5>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Plan your next big moment: schedule or edit an event to stay on
-                track
-              </p>
-            </div>
-            <div className="mt-8">
-              <div>
+      </div>
+
+      {/* Modal */}
+       {role === 'teacher' && modalOpen && (
+        <>
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 backdrop-blur-xs bg-opacity-50 z-40"
+            onClick={() => setModalOpen(false)}
+          ></div>
+          
+          {/* Modal Content */}
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md border border-gray-200 dark:border-gray-700">
+              {/* Modal Header */}
+              <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  {editingId ? 'Edit Event' : 'Add New Event'}
+                </h3>
+              </div>
+
+              {/* Modal Body */}
+              <div className="px-6 py-4 space-y-4">
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Event Title
                   </label>
                   <input
-                    id="event-title"
                     type="text"
-                    value={eventTitle}
-                    onChange={(e) => setEventTitle(e.target.value)}
-                    className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                    placeholder="Enter event title"
+                    value={formData.heading}
+                    onChange={(e) => setFormData({ ...formData, heading: e.target.value })}
                   />
                 </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Subject
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                    placeholder="Enter subject"
+                    value={formData.subject}
+                    onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Description
+                  </label>
+                  <textarea
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 resize-none"
+                    placeholder="Add description"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Start Date
+                    </label>
+                    <input
+                      type="date"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                      value={formData.startDate}
+                      onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      End Date
+                    </label>
+                    <input
+                      type="date"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                      value={formData.endDate}
+                      onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                    />
+                  </div>
+                </div>
               </div>
-              <div className="mt-6">
-                <label className="block mb-4 text-sm font-medium text-gray-700 dark:text-gray-400">
-                  Event Color
-                </label>
-                <div className="flex flex-wrap items-center gap-4 sm:gap-5">
-                  {Object.entries(calendarsEvents).map(([key, value]) => (
-                    <div key={key} className="n-chk">
-                      <div
-                        className={`form-check form-check-${value} form-check-inline`}
-                      >
-                        <label
-                          className="flex items-center text-sm text-gray-700 form-check-label dark:text-gray-400"
-                          htmlFor={`modal${key}`}
-                        >
-                          <span className="relative">
-                            <input
-                              className="sr-only form-check-input"
-                              type="radio"
-                              name="event-level"
-                              value={key}
-                              id={`modal${key}`}
-                              checked={eventLevel === key}
-                              onChange={() => setEventLevel(key)}
-                            />
-                            <span className="flex items-center justify-center w-5 h-5 mr-2 border border-gray-300 rounded-full box dark:border-gray-700">
-                              <span
-                                className={`h-2 w-2 rounded-full bg-white ${
-                                  eventLevel === key ? "block" : "hidden"
-                                }`}
-                              ></span>
-                            </span>
-                          </span>
-                          {key}
-                        </label>
-                      </div>
+
+              {/* Modal Footer */}
+              <div className="px-6 py-4 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-600 flex justify-end space-x-3">
+                {editingId && (
+                  <button
+                    onClick={handleDelete}
+                    disabled={isLoading}
+                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Delete
+                  </button>
+                )}
+                <button
+                  onClick={() => setModalOpen(false)}
+                  disabled={isLoading}
+                  className="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-400 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSubmit}
+                  disabled={isLoading}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {isLoading ? (
+                    <div className="flex items-center space-x-2">
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      <span>Saving...</span>
                     </div>
-                  ))}
-                </div>
+                  ) : (
+                    editingId ? 'Update' : 'Create'
+                  )}
+                </button>
               </div>
-
-              <div className="mt-6">
-                <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                  Enter Start Date
-                </label>
-                <div className="relative">
-                  <input
-                    id="event-start-date"
-                    type="date"
-                    value={eventStartDate}
-                    onChange={(e) => setEventStartDate(e.target.value)}
-                    className="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 pl-4 pr-11 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
-                  />
-                </div>
-              </div>
-
-              <div className="mt-6">
-                <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                  Enter End Date
-                </label>
-                <div className="relative">
-                  <input
-                    id="event-end-date"
-                    type="date"
-                    value={eventEndDate}
-                    onChange={(e) => setEventEndDate(e.target.value)}
-                    className="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 pl-4 pr-11 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
-                  />
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 mt-6 modal-footer sm:justify-end">
-              <button
-                onClick={closeModal}
-                type="button"
-                className="flex w-full justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] sm:w-auto"
-              >
-                Close
-              </button>
-              <button
-                onClick={handleAddOrUpdateEvent}
-                type="button"
-                className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
-              >
-                {selectedEvent ? "Update Changes" : "Add Event"}
-              </button>
             </div>
           </div>
-        </Modal>
-      </div>
-    </>
-  );
-};
-
-const renderEventContent = (eventInfo: any) => {
-  const type = eventInfo.event.extendedProps.calendar;
-
-  const bgColorMap: Record<string, string> = {
-    Holiday: "bg-red-500",
-    PTM: "bg-green-500",
-    Exams: "bg-blue-500",
-    Events: "bg-yellow-500",
-  };
-
-  const bgColor = bgColorMap[type] || "bg-gray-500";
-
-  return (
-    <div className={`flex items-center gap-2 p-1 rounded-sm text-white ${bgColor}`}>
-      <div className="fc-event-time">{eventInfo.timeText}</div>
-      <div className="fc-event-title">{eventInfo.event.title}</div>
+        </>
+      )}
     </div>
   );
 };
-
 
 export default Calendar;

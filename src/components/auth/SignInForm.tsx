@@ -35,18 +35,20 @@ export default function SignInForm() {
         {
           headers: {
             tenant: tenant,
-            Authorization: "Bearer " + sessionStorage.getItem("token"),
+            
           },
         }
       );
-
-      const { jwt, role, name, empId } = response.data;
+      
+       
+      const { jwt, role, name, empId  } = response.data;
 
       sessionStorage.setItem("token", jwt);
       sessionStorage.setItem("userRole", role);
       sessionStorage.setItem("userName", name);
       sessionStorage.setItem("userId", empId);
       sessionStorage.setItem("tenant", tenant);
+      
 
       alert("Login successful!");
       navigate("/");
@@ -111,8 +113,8 @@ export default function SignInForm() {
                     Select a tenant
                   </option>
                   <option value="UHF">UHF</option>
-                  <option value="school-123">School 123</option>
-                  <option value="college-abc">College ABC</option>
+                  <option value="NETWELL">NETWELL</option>
+                  <option value="INNOVATION">INNOVATION</option>
                   <option value="org-xyz">Org XYZ</option>
                 </select>
               </div>

@@ -21,11 +21,11 @@ const dummyStudents = [
   },
 ];
 
-const generateDummyAttendance = () => {
-  const result = {};
+const generateDummyAttendance = (): { [key: string]: { [date: string]: 'Present' | 'Absent' | 'Leave' } } => {
+  const result: { [key: string]: { [date: string]: 'Present' | 'Absent' | 'Leave' } } = {};
 
   dummyStudents.forEach((student) => {
-    const records = {};
+    const records: { [key: string]: 'Present' | 'Absent' | 'Leave' } = {};
     const start = new Date('2025-01-01');
     const end = new Date('2025-12-31');
 
@@ -69,7 +69,26 @@ const dummyAttendanceData = generateDummyAttendance();
 
 const AttendanceSummary = () => {
   const [query, setQuery] = useState('');
-  const [selectedStudent, setSelectedStudent] = useState(null);
+  interface Student {
+      id: string;
+      name: string;
+      rollNo: string;
+      class: string;
+      section: string;
+      admissionNo: string;
+      photo: string;
+    }
+  
+    interface AttendanceRecord {
+      [date: string]: 'Present' | 'Absent' | 'Leave';
+    }
+  
+    interface AttendanceData {
+      [studentId: string]: AttendanceRecord;
+    }
+    
+    const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+    const attendanceData: AttendanceData = dummyAttendanceData;
 
   const handleSearch = () => {
     if (!query.trim()) return;
@@ -83,7 +102,7 @@ const AttendanceSummary = () => {
     setSelectedStudent(student || null);
   };
 
-  const getAttendanceSummary = (records) => {
+  const getAttendanceSummary = (records: AttendanceRecord) => {
     const totalDays = Object.keys(records).length;
     const presentDays = Object.values(records).filter((v) => v === 'Present').length;
     const absentDays = Object.values(records).filter((v) => v === 'Absent').length;
@@ -99,8 +118,8 @@ const AttendanceSummary = () => {
     };
   };
 
-  const groupByMonth = (records) => {
-    const grouped = {};
+  const groupByMonth = (records: Record<string, 'Present' | 'Absent' | 'Leave'>) => {
+    const grouped: Record<string, { date: string; status: string }[]> = {};
     for (const date in records) {
       const month = date.slice(0, 7); // YYYY-MM
       if (!grouped[month]) grouped[month] = [];
@@ -110,7 +129,7 @@ const AttendanceSummary = () => {
   };
 
   // Get days of week for a month
-  const getDaysOfWeek = (month) => {
+  const getDaysOfWeek = (month: string) => {
     const result = [];
     const date = new Date(`${month}-01`);
     const year = date.getFullYear();
@@ -135,7 +154,7 @@ const AttendanceSummary = () => {
     return result;
   };
 
-  const statusColor = {
+  const statusColor: Record<'Present' | 'Absent' | 'Leave', string> = {
     Present: 'bg-green-500',
     Absent: 'bg-red-500',
     Leave: 'bg-blue-400',
@@ -147,7 +166,7 @@ const AttendanceSummary = () => {
     Leave: 'bg-blue-100 text-blue-800 border-blue-500',
   };
 
-  const getStatusLevel = (percent) => {
+  const getStatusLevel = (percent: number): string => {
     if (percent >= 90) return 'text-green-600';
     if (percent >= 75) return 'text-yellow-600';
     return 'text-red-600';
@@ -222,14 +241,14 @@ const AttendanceSummary = () => {
                       <span className="text-sm text-gray-500 dark:text-gray-400">Section</span>
                       <p className="font-medium text-gray-800 dark:text-white">{selectedStudent.section}</p>
                     </div>
-                    <div>
-                      <span className="text-sm text-gray-500 dark:text-gray-400">Admission No</span>
-                      <p className="font-medium text-gray-800 dark:text-white">{selectedStudent.admissionNo}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm text-gray-500 dark:text-gray-400">Academic Year</span>
-                      <p className="font-medium text-gray-800 dark:text-white">2025</p>
-                    </div>
+                <div>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">Admission No</span>
+                  <p className="font-medium text-gray-800 dark:text-white">{selectedStudent.admissionNo}</p>
+                </div>
+                <div>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">Academic Year</span>
+                  <p className="font-medium text-gray-800 dark:text-white">2025</p>
+                </div>
                   </div>
                 </div>
               </div>
@@ -244,7 +263,7 @@ const AttendanceSummary = () => {
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
                       <div className="bg-white dark:bg-gray-700 p-4 rounded-md shadow-sm border border-gray-200 dark:border-gray-600">
                         <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Attendance Rate</div>
-                        <div className={`text-2xl font-bold ${getStatusLevel(summary.percent)}`}>
+                        <div className={`text-2xl font-bold ${getStatusLevel(parseFloat(summary.percent))}`}>
                           {summary.percent}%
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
@@ -327,7 +346,7 @@ const AttendanceSummary = () => {
                                 return (
                                   <div
                                     key={dateStr}
-                                    className={`w-6 h-6 rounded-sm ${statusColor[dayInfo.status]} flex items-center justify-center text-xs text-white font-medium`}
+                                    className={`w-6 h-6 rounded-sm ${statusColor[dayInfo.status as 'Present' | 'Absent' | 'Leave']} flex items-center justify-center text-xs text-white font-medium`}
                                     title={`${dateStr}: ${dayInfo.status}`}
                                   >
                                     {new Date(dateStr).getDate()}
@@ -356,7 +375,7 @@ const AttendanceSummary = () => {
                           </thead>
                           <tbody>
                             {Object.entries(studentAttendance)
-                              .sort((a, b) => new Date(b[0]) - new Date(a[0]))
+                              .sort((a, b) => new Date(b[0]).getTime() - new Date(a[0]).getTime())
                               .slice(0, 10)
                               .map(([date, status]) => (
                                 <tr key={date} className="border-b border-gray-200 dark:border-gray-700">
