@@ -33,25 +33,25 @@ const adminNavItems: NavItem[] = [
     icon: <GridIcon />,
     name: "Dashboard",
     subItems: [{ name: "Analytics", path: "/", pro: false }],
-    roles: ["admin", "student", "teacher", "superadmin"],
+    roles: ["admin", "student", "teacher"],
   },
   {
     icon: <CalenderIcon />,
     name: "Calendar",
     path: "/calendar",
-    roles: ["admin", "student", "teacher", "superadmin"],
+    roles: ["admin", "student", "teacher"],
   },
   {
     icon: <UserCircleIcon />,
     name: "User Profile",
     path: "/profile",
-    roles: ["admin", "student", "teacher", "superadmin"],
+    roles: ["admin", "student", "teacher"],
   },
   {
     name: "Forms",
     icon: <ListIcon />,
     subItems: [{ name: "Application Form", path: "/form-elements", pro: false }],
-    roles: ["admin", "superadmin"],
+    roles: ["admin", "teacher"],
   },
   {
     name: "Results",
@@ -60,7 +60,7 @@ const adminNavItems: NavItem[] = [
       { name: "Student", path: "/StudentResult", pro: false },
       { name: "TeacherPage", path: "/TeacherPage", pro: false },
     ],
-    roles: ["admin", "superadmin"],
+    roles: ["admin", "teacher"],
   },
   {
     name: "Attendance",
@@ -71,7 +71,7 @@ const adminNavItems: NavItem[] = [
       { name: "Class Attendance", path: "/FacultyAttendance", pro: false },
       { name: "Attendance Summary", path: "/AttendanceSummary", pro: false },
     ],
-    roles: ["admin", "superadmin"],
+    roles: ["admin", "teacher"],
   },
   {
     icon: < MdLocalLibrary />,
@@ -79,16 +79,16 @@ const adminNavItems: NavItem[] = [
     subItems: [
       { name: "Issue books", path: "/libpage", pro: false },
       { name: "View books", path: "/viewbooks", pro: false },
-      { name: "Add books", path: "/addbook", pro: false, roles: ["admin", "superadmin"] },
+      { name: "Add books", path: "/addbook", pro: false, roles: ["admin", "teacher"] },
       { name: "Books list", path: "/booklist", pro: false },
     ],
-    roles: ["admin", "student", "superadmin"],
+    roles: ["admin", "student", "teacher"],
   },
   {
     name: "Syllabus",
     icon: <TableIcon />,
     subItems: [{ name: "Syllabus", path: "/SyllabusPage", pro: false }],
-    roles: ["admin", "student", "teacher", "superadmin"],
+    roles: ["admin", "student",  "teacher"],
   },
   {
     icon: <GiArchiveRegister />,
@@ -97,7 +97,7 @@ const adminNavItems: NavItem[] = [
       { name: "Add Student", path: "/student-form", pro: false },
       { name: "Add Teacher", path: "/teacher-form", pro: false },
     ],
-    roles: ["admin", "superadmin"],
+    roles: ["admin", "teacher"],
   },
 ];
 
@@ -146,7 +146,7 @@ const othersItems: NavItem[] = [
     subItems: [
       { name: "Sign In", path: "/signin", pro: false },
     ],
-    roles: ["admin", "student", "teacher", "superadmin"],
+    roles: ["admin", "student", "teacher", "teacher"],
   },
 ];
 

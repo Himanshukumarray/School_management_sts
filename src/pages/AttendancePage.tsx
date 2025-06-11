@@ -21,7 +21,7 @@ const students: Student[] = [
 ];
 
 const getDaysInMonth = (year: number, month: number): number => {
-  return new Date(year, month, 0).getDate(); // Note: month is 1-based here
+  return new Date(year, month, 0).getDate();
 };
 
 const AttendancePage: React.FC = () => {

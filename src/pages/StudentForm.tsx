@@ -61,7 +61,7 @@ const StudentForm: React.FC = () => {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
-          'tenant': tenant, // ✅ fixed this
+          'tenant': tenant, 
         },
       }
     );

@@ -56,15 +56,15 @@ const App: React.FC = () => {
           <Route
             path="/StudentResult"
             element={
-              <ProtectedRoute allowedRoles={["student", "admin"]}>
-                <StudentResult />
+              <ProtectedRoute allowedRoles={["student", "admin" ,"teacher"]}>
+                <StudentPage />
               </ProtectedRoute>
             }
           />
           <Route
             path="/StudentLeaveRequestForm"
             element={
-              <ProtectedRoute allowedRoles={["student", "admin"]}>
+              <ProtectedRoute allowedRoles={["student", "admin", "teacher"]}>
                 <StudentLeaveRequestForm />
               </ProtectedRoute>
             }
@@ -72,7 +72,7 @@ const App: React.FC = () => {
           <Route
             path="/SyllabusPage"
             element={
-              <ProtectedRoute allowedRoles={["student", "admin"]}>
+              <ProtectedRoute allowedRoles={["student", "admin" ,"teacher"]}>
                 <SyllabusPage />
               </ProtectedRoute>
             }
@@ -82,7 +82,7 @@ const App: React.FC = () => {
           <Route
             path="/TeacherPage"
             element={
-              <ProtectedRoute allowedRoles={["admin"]}>
+              <ProtectedRoute allowedRoles={["admin ,teacher"]}>
                 <TeacherPage />
               </ProtectedRoute>
             }
@@ -91,7 +91,7 @@ const App: React.FC = () => {
           <Route
             path="/AttendancePage"
             element={
-              <ProtectedRoute allowedRoles={["admin"]}>
+              <ProtectedRoute allowedRoles={["admin", "teacher"]}>
                 <AttendancePage />
               </ProtectedRoute>
             }
@@ -99,7 +99,7 @@ const App: React.FC = () => {
           <Route
             path="/TeacherAttendacePage"
             element={
-              <ProtectedRoute allowedRoles={["admin"]}>
+              <ProtectedRoute allowedRoles={["admin" , "teacher"]}>
                 <TeacherAttendance />
               </ProtectedRoute>
             }
@@ -107,7 +107,7 @@ const App: React.FC = () => {
           <Route
             path="/FacultyAttendance"
             element={
-              <ProtectedRoute allowedRoles={["admin"]}>
+              <ProtectedRoute allowedRoles={["admin" , "teacher"]}>
                 <FacultyAttendance />
               </ProtectedRoute>
             }
@@ -115,7 +115,7 @@ const App: React.FC = () => {
           <Route
             path="/AttendanceSummary"
             element={
-              <ProtectedRoute allowedRoles={["admin"]}>
+              <ProtectedRoute allowedRoles={["admin", "teacher"]}>
                 <AttendanceSummary />
               </ProtectedRoute>
             }
@@ -123,7 +123,7 @@ const App: React.FC = () => {
           <Route
             path="/libpage"
             element={
-              <ProtectedRoute allowedRoles={["student", "admin"]}>
+              <ProtectedRoute allowedRoles={["student", "admin", "teacher"]}>
                 <LibraryIssuePage />
               </ProtectedRoute>
             }
@@ -131,7 +131,7 @@ const App: React.FC = () => {
           <Route
             path="/viewbooks"
             element={
-              <ProtectedRoute allowedRoles={["student", "admin"]}>
+              <ProtectedRoute allowedRoles={["student", "admin" , "teacher"]}>
                 <Viewbooks />
               </ProtectedRoute>
             }
@@ -139,7 +139,7 @@ const App: React.FC = () => {
           <Route
             path="/addbook"
             element={
-              <ProtectedRoute allowedRoles={["admin"]}>
+              <ProtectedRoute allowedRoles={["admin", "teacher"]}>
                 <AddBookForm />
               </ProtectedRoute>
             }
@@ -147,7 +147,7 @@ const App: React.FC = () => {
           <Route
             path="/student-form"
             element={
-              <ProtectedRoute allowedRoles={["admin"]}>
+              <ProtectedRoute allowedRoles={["admin", "teacher"]}>
                 <StudentForm  />
               </ProtectedRoute>
             }
@@ -165,7 +165,7 @@ const App: React.FC = () => {
           <Route
             path="/booklist"
             element={
-              <ProtectedRoute allowedRoles={["student", "admin"]}>
+              <ProtectedRoute allowedRoles={["student", "admin", "teacher"]}>
                 <BookListPage />
               </ProtectedRoute>
             }

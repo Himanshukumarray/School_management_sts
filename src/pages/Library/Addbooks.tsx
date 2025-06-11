@@ -9,8 +9,6 @@ interface BookFormData {
   purchaseDate: string;
   totalCopies: number;
   availableCopies: number;
-  
-  // We'll keep these fields for UI purposes but they won't be sent to the API
   isbn?: string;
   bookCode?: string;
   edition?: string;
@@ -30,8 +28,6 @@ const AddBookForm: React.FC = () => {
     purchaseDate: new Date().toISOString().split('T')[0], // Current date in YYYY-MM-DD format
     totalCopies: 1,
     availableCopies: 1,
-    
-    // Additional UI fields
     isbn: "",
     bookCode: "",
     edition: "",
@@ -161,7 +157,6 @@ const AddBookForm: React.FC = () => {
       purchaseDate: new Date().toISOString().split('T')[0],
       totalCopies: 1,
       availableCopies: 1,
-      
       isbn: "",
       bookCode: "",
       edition: "",

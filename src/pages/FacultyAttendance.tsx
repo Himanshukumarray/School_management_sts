@@ -92,7 +92,7 @@ const FacultyAttendance = () => {
       if (!updatedData[key]) {
         updatedData[key] = {};
         dummyStudents.forEach(s => {
-          updatedData[key][s.id] = 'Present'; // Default all to present
+          updatedData[key][s.id] = 'Present'; 
         });
       }
 
