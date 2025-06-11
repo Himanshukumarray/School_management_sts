@@ -17,7 +17,7 @@ import Calendar from "./pages/Calendar";
 import BasicTables from "./pages/Tables/BasicTables";
 import FormElements from "./pages/Forms/FormElements";
 import Blank from "./pages/Blank";
-import StudentResult from "./pages/Result";
+import StudentPage from "./pages/Result";
 import TeacherPage from "./pages/teacher-page";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
