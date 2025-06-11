@@ -1,404 +1,323 @@
 import React, { useState } from 'react';
+import { Calendar, User, TrendingUp, Clock, CheckCircle, XCircle, Coffee, Sunset } from 'lucide-react';
 
-const dummyStudents = [
-  { 
-    id: 'S001', 
-    name: 'Aarav Mehta', 
-    rollNo: '01',
-    class: 'X-A',
-    section: 'A', 
-    admissionNo: 'ADM2025001',
-    photo: '/api/placeholder/80/80' 
-  },
-  { 
-    id: 'S002', 
-    name: 'Isha Singh', 
-    rollNo: '02',
-    class: 'X-A',
-    section: 'A',
-    admissionNo: 'ADM2025002',
-    photo: 'https://randomuser.me/api/portraits/women/2.jpg'
-  },
-];
+interface Summary {
+    presentDays: number;
+    absentDays: number;
+    leaveDays: number;
+    holidays: number;
+}
 
-const generateDummyAttendance = () => {
-  const result = {};
+const AttendanceSummary: React.FC = () => {
+    const [teacherId, setTeacherId] = useState<number | ''>('');
+    const [year, setYear] = useState<number | ''>('');
+    const [month, setMonth] = useState<number | ''>('');
+    const [summary, setSummary] = useState<Summary | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState<boolean>(false);
 
-  dummyStudents.forEach((student) => {
-    const records = {};
-    const start = new Date('2025-01-01');
-    const end = new Date('2025-12-31');
+    const fetchSummary = async () => {
+        if (!teacherId || !year || !month) {
+            setError('Please fill in all fields');
+            return;
+        }
 
-    // Generate some typical patterns - more absences on Mondays,
-    // better attendance mid-semester, etc.
-    while (start <= end) {
-      const isoDate = start.toISOString().split('T')[0];
-      const dayOfWeek = start.getDay();
-      const month = start.getMonth();
-      
-      let presentChance = 0.9; // Base chance of being present
-      
-      // Mondays have higher absence rate
-      if (dayOfWeek === 1) presentChance -= 0.2;
-      
-      // Middle of semesters have better attendance
-      if ((month >= 2 && month <= 4) || (month >= 8 && month <= 10)) {
-        presentChance += 0.05;
-      }
-      
-      // End of semesters have more leaves
-      if (month === 5 || month === 11) {
-        presentChance -= 0.1;
-      }
+        if (month < 1 || month > 12) {
+            setError('Month must be between 1 and 12');
+            return;
+        }
 
-      const rand = Math.random();
-      if (rand < presentChance) records[isoDate] = 'Present';
-      else if (rand < presentChance + 0.08) records[isoDate] = 'Absent';
-      else records[isoDate] = 'Leave';
+        setLoading(true);
+        setError(null);
 
-      start.setDate(start.getDate() + 1);
-    }
+        try {
+            const response = await fetch('http://localhost:8080/api/attendance/monthly-summary?' + 
+                new URLSearchParams({
+                    teacherId: teacherId.toString(),
+                    year: year.toString(),
+                    month: month.toString()
+                })
+            );
 
-    result[student.id] = records;
-  });
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
 
-  return result;
-};
-
-const dummyAttendanceData = generateDummyAttendance();
-
-const AttendanceSummary = () => {
-  const [query, setQuery] = useState('');
-  const [selectedStudent, setSelectedStudent] = useState(null);
-
-  const handleSearch = () => {
-    if (!query.trim()) return;
-    
-    const student = dummyStudents.find(
-      (s) =>
-        s.name.toLowerCase().includes(query.toLowerCase()) ||
-        s.rollNo === query ||
-        s.admissionNo.toLowerCase() === query.toLowerCase()
-    );
-    setSelectedStudent(student || null);
-  };
-
-  const getAttendanceSummary = (records) => {
-    const totalDays = Object.keys(records).length;
-    const presentDays = Object.values(records).filter((v) => v === 'Present').length;
-    const absentDays = Object.values(records).filter((v) => v === 'Absent').length;
-    const leaveDays = Object.values(records).filter((v) => v === 'Leave').length;
-    const percent = (presentDays / totalDays) * 100;
-    
-    return { 
-      totalDays, 
-      presentDays, 
-      absentDays, 
-      leaveDays, 
-      percent: percent.toFixed(1) 
+            const data = await response.json();
+            setSummary(data);
+        } catch (err) {
+            console.error('Error fetching attendance summary:', err);
+            if (err instanceof Error) {
+                setError(`Error fetching summary: ${err.message}`);
+            } else {
+                setError('Error fetching summary. Please try again.');
+            }
+            setSummary(null);
+        } finally {
+            setLoading(false);
+        }
     };
-  };
 
-  const groupByMonth = (records) => {
-    const grouped = {};
-    for (const date in records) {
-      const month = date.slice(0, 7); // YYYY-MM
-      if (!grouped[month]) grouped[month] = [];
-      grouped[month].push({ date, status: records[date] });
-    }
-    return grouped;
-  };
+    const handleInputChange = (
+        setter: React.Dispatch<React.SetStateAction<number | ''>>,
+        value: string
+    ) => {
+        const numValue = value === '' ? '' : Number(value);
+        setter(numValue);
+    };
 
-  // Get days of week for a month
-  const getDaysOfWeek = (month) => {
-    const result = [];
-    const date = new Date(`${month}-01`);
-    const year = date.getFullYear();
-    const monthNum = date.getMonth();
-    
-    // Get first day of month
-    date.setDate(1);
-    const firstDay = date.getDay();
-    
-    // Add empty cells for days before the first of month
-    for (let i = 0; i < firstDay; i++) {
-      result.push(null);
-    }
-    
-    // Add all days in month
-    const daysInMonth = new Date(year, monthNum + 1, 0).getDate();
-    for (let i = 1; i <= daysInMonth; i++) {
-      const currentDate = new Date(year, monthNum, i);
-      result.push(currentDate.toISOString().split('T')[0]);
-    }
-    
-    return result;
-  };
+    const getMonthName = (monthNum: number) => {
+        const months = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+        return months[monthNum - 1];
+    };
 
-  const statusColor = {
-    Present: 'bg-green-500',
-    Absent: 'bg-red-500',
-    Leave: 'bg-blue-400',
-  };
+    const getTotalDays = () => {
+        if (!summary) return 0;
+        return summary.presentDays + summary.absentDays + summary.leaveDays + summary.holidays;
+    };
 
-  const statusStyle = {
-    Present: 'bg-green-100 text-green-800 border-green-500',
-    Absent: 'bg-red-100 text-red-800 border-red-500',
-    Leave: 'bg-blue-100 text-blue-800 border-blue-500',
-  };
+    const getAttendancePercentage = () => {
+        if (!summary) return 0;
+        const total = getTotalDays();
+        return total > 0 ? Math.round((summary.presentDays / total) * 100) : 0;
+    };
 
-  const getStatusLevel = (percent) => {
-    if (percent >= 90) return 'text-green-600';
-    if (percent >= 75) return 'text-yellow-600';
-    return 'text-red-600';
-  };
-
-  return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4">
-      <div className="max-w-5xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
-            Student Attendance Dashboard
-          </h2>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 rounded-sm bg-green-500"></div>
-              <span className="text-xs text-gray-600 dark:text-gray-300">Present</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 rounded-sm bg-red-500"></div>
-              <span className="text-xs text-gray-600 dark:text-gray-300">Absent</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 rounded-sm bg-blue-400"></div>
-              <span className="text-xs text-gray-600 dark:text-gray-300">Leave</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
-          <div className="flex flex-col md:flex-row items-center gap-4 mb-6">
-            <input
-              type="text"
-              placeholder="Search by name, roll no or admission no"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="flex-grow px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-            />
-            <button
-              onClick={handleSearch}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md"
-            >
-              Search
-            </button>
-          </div>
-
-          {selectedStudent ? (
-            <>
-              <div className="flex flex-col md:flex-row items-start gap-6 mb-8 p-4 border-b border-gray-200 dark:border-gray-700">
-                <div className="flex-shrink-0">
-                  <img 
-                    src={selectedStudent.photo} 
-                    alt={selectedStudent.name}
-                    className="w-20 h-20 rounded-full border-2 border-gray-300" 
-                  />
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6">
+            <div className="max-w-4xl mx-auto">
+                {/* Header */}
+                <div className="text-center mb-8">
+                    <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full mb-4 shadow-lg">
+                        <TrendingUp className="w-8 h-8 text-white" />
+                    </div>
+                    <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+                        Attendance Analytics
+                    </h1>
+                    <p className="text-gray-600 text-lg">Track and analyze monthly attendance patterns</p>
                 </div>
-                
-                <div className="flex-grow">
-                  <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">
-                    {selectedStudent.name}
-                  </h3>
-                  
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-y-2 gap-x-6">
-                    <div>
-                      <span className="text-sm text-gray-500 dark:text-gray-400">Roll No</span>
-                      <p className="font-medium text-gray-800 dark:text-white">{selectedStudent.rollNo}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm text-gray-500 dark:text-gray-400">Class</span>
-                      <p className="font-medium text-gray-800 dark:text-white">{selectedStudent.class}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm text-gray-500 dark:text-gray-400">Section</span>
-                      <p className="font-medium text-gray-800 dark:text-white">{selectedStudent.section}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm text-gray-500 dark:text-gray-400">Admission No</span>
-                      <p className="font-medium text-gray-800 dark:text-white">{selectedStudent.admissionNo}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm text-gray-500 dark:text-gray-400">Academic Year</span>
-                      <p className="font-medium text-gray-800 dark:text-white">2025</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
 
-              {(() => {
-                const studentAttendance = dummyAttendanceData[selectedStudent.id];
-                const summary = getAttendanceSummary(studentAttendance);
-                const monthlyData = groupByMonth(studentAttendance);
-
-                return (
-                  <>
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                      <div className="bg-white dark:bg-gray-700 p-4 rounded-md shadow-sm border border-gray-200 dark:border-gray-600">
-                        <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Attendance Rate</div>
-                        <div className={`text-2xl font-bold ${getStatusLevel(summary.percent)}`}>
-                          {summary.percent}%
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                          <div 
-                            className="bg-blue-600 h-2 rounded-full" 
-                            style={{ width: `${summary.percent}%` }}
-                          ></div>
-                        </div>
-                      </div>
-                      
-                      <div className="bg-white dark:bg-gray-700 p-4 rounded-md shadow-sm border border-gray-200 dark:border-gray-600">
-                        <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Present Days</div>
-                        <div className="text-2xl font-bold text-green-600">{summary.presentDays}</div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                          of {summary.totalDays} days
-                        </div>
-                      </div>
-                      
-                      <div className="bg-white dark:bg-gray-700 p-4 rounded-md shadow-sm border border-gray-200 dark:border-gray-600">
-                        <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Absent Days</div>
-                        <div className="text-2xl font-bold text-red-600">{summary.absentDays}</div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                          {((summary.absentDays / summary.totalDays) * 100).toFixed(1)}% of total
-                        </div>
-                      </div>
-                      
-                      <div className="bg-white dark:bg-gray-700 p-4 rounded-md shadow-sm border border-gray-200 dark:border-gray-600">
-                        <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Leave Days</div>
-                        <div className="text-2xl font-bold text-blue-600">{summary.leaveDays}</div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                          {((summary.leaveDays / summary.totalDays) * 100).toFixed(1)}% of total
-                        </div>
-                      </div>
+                {/* Input Form */}
+                <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-8 mb-8 border border-white/20">
+                    <div className="flex items-center mb-6">
+                        <Calendar className="w-6 h-6 text-blue-600 mr-3" />
+                        <h2 className="text-2xl font-semibold text-gray-800">Generate Report</h2>
                     </div>
-
-                    <h4 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
-                      Yearly Attendance Calendar
-                    </h4>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {Object.entries(monthlyData).map(([month, days]) => {
-                        const daysOfWeek = getDaysOfWeek(month);
-                        const formattedMonth = new Date(month + '-01').toLocaleString('default', {
-                          month: 'long',
-                          year: 'numeric',
-                        });
-                        
-                        return (
-                          <div key={month} className="bg-white dark:bg-gray-700 p-4 rounded-md shadow-sm border border-gray-200 dark:border-gray-600">
-                            <h5 className="text-md font-medium text-gray-800 dark:text-white mb-3">
-                              {formattedMonth}
-                            </h5>
-                            
-                            <div className="grid grid-cols-7 gap-1 mb-1">
-                              {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
-                                <div key={i} className="text-xs font-medium text-gray-500 dark:text-gray-400 text-center">
-                                  {day}
+                    <div className="grid md:grid-cols-3 gap-6">
+                        <div className="group">
+                            <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+                                <User className="w-4 h-4 mr-2 text-blue-500" />
+                                Teacher ID
+                            </label>
+                            <input
+                                type="number"
+                                placeholder="Enter ID"
+                                value={teacherId}
+                                onChange={(e) => handleInputChange(setTeacherId, e.target.value)}
+                                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm group-hover:shadow-md"
+                            />
+                        </div>
+
+                        <div className="group">
+                            <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+                                <Calendar className="w-4 h-4 mr-2 text-blue-500" />
+                                Year
+                            </label>
+                            <input
+                                type="number"
+                                placeholder="2024"
+                                value={year}
+                                onChange={(e) => handleInputChange(setYear, e.target.value)}
+                                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm group-hover:shadow-md"
+                            />
+                        </div>
+
+                        <div className="group">
+                            <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+                                <Clock className="w-4 h-4 mr-2 text-blue-500" />
+                                Month
+                            </label>
+                            <input
+                                type="number"
+                                placeholder="1-12"
+                                value={month}
+                                onChange={(e) => handleInputChange(setMonth, e.target.value)}
+                                min="1"
+                                max="12"
+                                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm group-hover:shadow-md"
+                            />
+                        </div>
+                    </div>
+
+                    <button
+                        onClick={fetchSummary}
+                        disabled={loading}
+                        className={`w-full mt-6 py-4 px-6 rounded-xl font-semibold text-white transition-all duration-300 ${
+                            loading
+                                ? 'bg-gray-400 cursor-not-allowed'
+                                : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
+                        }`}
+                    >
+                        {loading ? (
+                            <div className="flex items-center justify-center">
+                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                                Generating Report...
+                            </div>
+                        ) : (
+                            'Generate Attendance Report'
+                        )}
+                    </button>
+                </div>
+
+                {/* Error Message */}
+                {error && (
+                    <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-8 rounded-r-xl">
+                        <div className="flex items-center">
+                            <XCircle className="w-5 h-5 text-red-500 mr-2" />
+                            <p className="text-red-700 font-medium">{error}</p>
+                        </div>
+                    </div>
+                )}
+
+                {/* Summary Results */}
+                {summary && (
+                    <div className="space-y-6">
+                        {/* Header Card */}
+                        <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-white/20">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-2xl font-bold text-gray-800">
+                                    {getMonthName(Number(month))} {year} Report
+                                </h3>
+                                <div className="flex items-center space-x-2">
+                                    <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                                    <span className="text-sm text-gray-600">Live Data</span>
                                 </div>
-                              ))}
                             </div>
                             
-                            <div className="grid grid-cols-7 gap-1">
-                              {daysOfWeek.map((dateStr, idx) => {
-                                if (!dateStr) {
-                                  return <div key={`empty-${idx}`} className="w-6 h-6"></div>;
-                                }
-                                
-                                const dayInfo = days.find(d => d.date === dateStr);
-                                if (!dayInfo) {
-                                  return (
-                                    <div 
-                                      key={dateStr} 
-                                      className="w-6 h-6 flex items-center justify-center text-xs text-gray-400"
-                                    >
-                                      {new Date(dateStr).getDate()}
+                            {/* Attendance Percentage */}
+                            <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 mb-4 border border-green-200">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-sm text-green-700 font-medium">Overall Attendance</p>
+                                        <p className="text-3xl font-bold text-green-600">{getAttendancePercentage()}%</p>
                                     </div>
-                                  );
-                                }
-                                
-                                return (
-                                  <div
-                                    key={dateStr}
-                                    className={`w-6 h-6 rounded-sm ${statusColor[dayInfo.status]} flex items-center justify-center text-xs text-white font-medium`}
-                                    title={`${dateStr}: ${dayInfo.status}`}
-                                  >
-                                    {new Date(dateStr).getDate()}
-                                  </div>
-                                );
-                              })}
+                                    <div className="text-green-500">
+                                        <CheckCircle className="w-12 h-12" />
+                                    </div>
+                                </div>
+                                <div className="mt-3 bg-white rounded-full h-2 overflow-hidden">
+                                    <div 
+                                        className="bg-gradient-to-r from-green-500 to-emerald-500 h-full transition-all duration-1000 ease-out"
+                                        style={{ width: `${getAttendancePercentage()}%` }}
+                                    ></div>
+                                </div>
                             </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    
-                    <div className="mt-8">
-                      <h4 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
-                        Recent Attendance Records
-                      </h4>
-                      
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full border-collapse">
-                          <thead>
-                            <tr className="bg-gray-100 dark:bg-gray-700">
-                              <th className="py-2 px-4 text-left text-sm font-medium text-gray-600 dark:text-gray-300">Date</th>
-                              <th className="py-2 px-4 text-left text-sm font-medium text-gray-600 dark:text-gray-300">Day</th>
-                              <th className="py-2 px-4 text-left text-sm font-medium text-gray-600 dark:text-gray-300">Status</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {Object.entries(studentAttendance)
-                              .sort((a, b) => new Date(b[0]) - new Date(a[0]))
-                              .slice(0, 10)
-                              .map(([date, status]) => (
-                                <tr key={date} className="border-b border-gray-200 dark:border-gray-700">
-                                  <td className="py-2 px-4 text-sm text-gray-800 dark:text-white">
-                                    {new Date(date).toLocaleDateString('en-US', { 
-                                      year: 'numeric', 
-                                      month: 'short', 
-                                      day: 'numeric' 
-                                    })}
-                                  </td>
-                                  <td className="py-2 px-4 text-sm text-gray-800 dark:text-white">
-                                    {new Date(date).toLocaleDateString('en-US', { weekday: 'long' })}
-                                  </td>
-                                  <td className="py-2 px-4">
-                                    <span className={`px-2 py-1 text-xs rounded-full font-medium ${statusStyle[status]}`}>
-                                      {status}
-                                    </span>
-                                  </td>
-                                </tr>
-                              ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  </>
-                );
-              })()}
-            </>
-          ) : (
-            <div className="py-12 text-center">
-              <div className="text-gray-500 dark:text-gray-400 mb-4">
-                Search for a student to view their attendance summary
-              </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400">
-                Try searching with name, roll number, or admission number
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
+                        </div>
 
+                        {/* Stats Grid */}
+                        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            {/* Present Days */}
+                            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-white/20 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center">
+                                        <CheckCircle className="w-6 h-6 text-white" />
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-sm text-gray-600 font-medium">Present Days</p>
+                                        <p className="text-3xl font-bold text-green-600">{summary.presentDays}</p>
+                                    </div>
+                                </div>
+                                <div className="w-full bg-green-100 rounded-full h-2">
+                                    <div 
+                                        className="bg-gradient-to-r from-green-500 to-emerald-500 h-full rounded-full transition-all duration-1000"
+                                        style={{ width: `${(summary.presentDays / getTotalDays()) * 100}%` }}
+                                    ></div>
+                                </div>
+                            </div>
+
+                            {/* Absent Days */}
+                            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-white/20 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="w-12 h-12 bg-gradient-to-r from-red-500 to-pink-500 rounded-xl flex items-center justify-center">
+                                        <XCircle className="w-6 h-6 text-white" />
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-sm text-gray-600 font-medium">Absent Days</p>
+                                        <p className="text-3xl font-bold text-red-600">{summary.absentDays}</p>
+                                    </div>
+                                </div>
+                                <div className="w-full bg-red-100 rounded-full h-2">
+                                    <div 
+                                        className="bg-gradient-to-r from-red-500 to-pink-500 h-full rounded-full transition-all duration-1000"
+                                        style={{ width: `${(summary.absentDays / getTotalDays()) * 100}%` }}
+                                    ></div>
+                                </div>
+                            </div>
+
+                            {/* Leave Days */}
+                            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-white/20 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="w-12 h-12 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl flex items-center justify-center">
+                                        <Coffee className="w-6 h-6 text-white" />
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-sm text-gray-600 font-medium">Leave Days</p>
+                                        <p className="text-3xl font-bold text-yellow-600">{summary.leaveDays}</p>
+                                    </div>
+                                </div>
+                                <div className="w-full bg-yellow-100 rounded-full h-2">
+                                    <div 
+                                        className="bg-gradient-to-r from-yellow-500 to-orange-500 h-full rounded-full transition-all duration-1000"
+                                        style={{ width: `${(summary.leaveDays / getTotalDays()) * 100}%` }}
+                                    ></div>
+                                </div>
+                            </div>
+
+                            {/* Holidays */}
+                            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-white/20 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center">
+                                        <Sunset className="w-6 h-6 text-white" />
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-sm text-gray-600 font-medium">Holidays</p>
+                                        <p className="text-3xl font-bold text-blue-600">{summary.holidays}</p>
+                                    </div>
+                                </div>
+                                <div className="w-full bg-blue-100 rounded-full h-2">
+                                    <div 
+                                        className="bg-gradient-to-r from-blue-500 to-purple-500 h-full rounded-full transition-all duration-1000"
+                                        style={{ width: `${(summary.holidays / getTotalDays()) * 100}%` }}
+                                    ></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Summary Stats */}
+                        <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-white/20">
+                            <h4 className="text-lg font-semibold text-gray-800 mb-4">Monthly Overview</h4>
+                            <div className="grid md:grid-cols-3 gap-4 text-center">
+                                <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+                                    <p className="text-sm text-blue-700 font-medium">Total Days</p>
+                                    <p className="text-2xl font-bold text-blue-600">{getTotalDays()}</p>
+                                </div>
+                                <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200">
+                                    <p className="text-sm text-green-700 font-medium">Working Days</p>
+                                    <p className="text-2xl font-bold text-green-600">{summary.presentDays + summary.absentDays + summary.leaveDays}</p>
+                                </div>
+                                <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-200">
+                                    <p className="text-sm text-purple-700 font-medium">Attendance Rate</p>
+                                    <p className="text-2xl font-bold text-purple-600">{getAttendancePercentage()}%</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
 export default AttendanceSummary;
