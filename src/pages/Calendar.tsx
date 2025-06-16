@@ -208,8 +208,8 @@ const Calendar: React.FC = () => {
       </div>
 
       {/* Modal */}
-       {role === 'teacher' && modalOpen && (
-        <>
+       {(role === 'teacher' || role === 'admin') && modalOpen && (
++        <>
           {/* Backdrop */}
           <div 
             className="fixed inset-0 backdrop-blur-xs bg-opacity-50 z-40"

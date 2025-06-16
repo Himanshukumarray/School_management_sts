@@ -1,5 +1,6 @@
 import React, { useState, ChangeEvent, FormEvent } from 'react';
 import axios from 'axios';
+import axiosInstance from '../axios/axiosinstance';
 
 interface Student {
   studentAdmissionId: string;
@@ -54,8 +55,8 @@ const StudentForm: React.FC = () => {
   }
 
   try {
-    const response = await axios.post(
-      'http://localhost:8080/api/students',
+    const response = await axiosInstance.post(
+      '/students',
       formData,
       {
         headers: {

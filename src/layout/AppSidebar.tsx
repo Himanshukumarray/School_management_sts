@@ -47,12 +47,7 @@ const adminNavItems: NavItem[] = [
     path: "/profile",
     roles: ["admin", "student", "teacher"],
   },
-  {
-    name: "Forms",
-    icon: <ListIcon />,
-    subItems: [{ name: "Application Form", path: "/form-elements", pro: false }],
-    roles: ["admin", "teacher"],
-  },
+ 
   {
     name: "Results",
     icon: <PageIcon />,
@@ -439,7 +434,7 @@ const AppSidebar: React.FC = () => {
                   }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? (
-                  role === "admin" ? "Admin Menu" : "Student Menu"
+                  role === "admin" ? "Admin Menu" : "User Menu"
                 ) : (
                   <HorizontaLDots className="size-6" />
                 )}

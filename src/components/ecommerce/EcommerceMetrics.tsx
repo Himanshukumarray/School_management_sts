@@ -14,7 +14,7 @@ export default function UserMetrics() {
       {/* Welcome Message */}
       <div className="mb-6">
         <h2 className="text-2xl font-semibold text-gray-800 dark:text-white/90">
-          Welcome back, Rohan!
+          Welcome back, {sessionStorage.getItem("userName")}!
         </h2>
         <p className="text-gray-500 dark:text-gray-400">
           Here's a quick overview of your attendance and user activity.

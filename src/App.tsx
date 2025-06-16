@@ -18,7 +18,7 @@ import BasicTables from "./pages/Tables/BasicTables";
 import FormElements from "./pages/Forms/FormElements";
 import Blank from "./pages/Blank";
 import StudentPage from "./pages/Result";
-import TeacherPage from "./pages/teacher-page";
+import TeacherPage from "./pages/Teacher-page";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
@@ -82,7 +82,7 @@ const App: React.FC = () => {
           <Route
             path="/TeacherPage"
             element={
-              <ProtectedRoute allowedRoles={["admin ,teacher"]}>
+              <ProtectedRoute allowedRoles={["admin" ,"teacher"]}>
                 <TeacherPage />
               </ProtectedRoute>
             }
