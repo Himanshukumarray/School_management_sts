@@ -209,7 +209,7 @@ const UserProfiles: React.FC = () => {
     );
   }
 
-  const isTeacher = userRole === 'teacher';
+  const isTeacher = userRole === 'teacher' || userRole === 'admin';
   const isStudent = userRole === 'student';
 
   return (

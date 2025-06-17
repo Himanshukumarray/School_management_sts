@@ -63,7 +63,7 @@ const adminNavItems: NavItem[] = [
     subItems: [
       { name: "Teacher Attendance", path: "/TeacherAttendacePage", pro: false },
       { name: "Student Attendance", path: "/AttendancePage", pro: false },
-      { name: "Class Attendance", path: "/FacultyAttendance", pro: false },
+      // { name: "Class Attendance", path: "/FacultyAttendance", pro: false },
       { name: "Attendance Summary", path: "/AttendanceSummary", pro: false },
     ],
     roles: ["admin", "teacher"],

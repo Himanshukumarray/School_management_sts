@@ -37,6 +37,7 @@ import StudentForm from "./pages/StudentForm";
 import TeacherForm from "./pages/TeacherForm";
 import ProtectedRoute from "./components/ProtectedRoute";
 import EmailComposer from "./pages/Dashboard/Mail";
+import ViewStudentDetails from "./pages/ViewStudentDetails";
 
 const App: React.FC = () => {
   return (
@@ -164,6 +165,14 @@ const App: React.FC = () => {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/viewstudentdetails"
+            element={
+              <ProtectedRoute allowedRoles={["admin", "teacher"]}>
+                <ViewStudentDetails/>
+              </ProtectedRoute>
+            } 
+            />
           {/* <Route path="/teacher-form" element={<TeacherForm />} /> */}
 
           <Route
@@ -198,6 +207,7 @@ const App: React.FC = () => {
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
+    
   );
 };
 
