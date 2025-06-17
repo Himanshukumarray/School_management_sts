@@ -7,13 +7,20 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles }) => {
-    const userRole = sessionStorage.getItem("userRole");
-    
-    if (!userRole || !allowedRoles.includes(userRole)) {
-      return <Navigate to="/unauthorized" replace />;
-    }
-    
+  const token = sessionStorage.getItem("token");
+  const userRole = sessionStorage.getItem("userRole");
 
+  // 🔒 If no token, redirect to signin
+  if (!token) {
+    return <Navigate to="/signin" replace />;
+  }
+
+  // ⚠️ If token exists but role is not allowed, redirect to unauthorized
+  if (!userRole || !allowedRoles.includes(userRole)) {
+    return <Navigate to="/unauthorized" replace />;
+  }
+
+  // ✅ Authenticated and authorized
   return <>{children}</>;
 };
 

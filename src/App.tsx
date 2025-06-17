@@ -44,7 +44,11 @@ const App: React.FC = () => {
       <ScrollToTop />
       <Routes>
         <Route element={<AppLayout />}>
-          <Route index path="/" element={<Home />} />
+          <Route index path="/"  element={
+              <ProtectedRoute allowedRoles={["student", "admin" ,"teacher"]}>
+                <Home/>
+              </ProtectedRoute>
+            }/>
           <Route index path="/mail" element={<EmailComposer />} />
 
           {/* Open to All Roles */}
