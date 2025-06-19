@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Search, Calendar, Phone, Mail, MapPin, User } from 'lucide-react';
-import axios from 'axios';
+import axiosInstance from '../axios/axiosinstance';
 
 interface Student {
     id: number;
@@ -44,8 +44,8 @@ const ViewStudentDetails: React.FC = () => {
         setError('');
 
         try {
-            const response = await axios.get(
-                `http://localhost:8080/api/students/by-class?studentClass=${classValue}&role=${userRole}`,
+            const response = await axiosInstance.get(
+                `/students/by-class?studentClass=${classValue}&role=${userRole}`,
                 {
                     headers: {
                         'tenant': sessionStorage.getItem('tenant') || '',
