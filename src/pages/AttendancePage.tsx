@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import axiosInstance from "../axios/axiosinstance";
 
 interface Student {
   id: number;
@@ -49,8 +50,8 @@ const AttendancePage: React.FC = () => {
         setLoading(true);
         setError(null);
 
-        const res = await fetch(
-          `http://localhost:8080/api/students/batch?batch=${selectedBatch}`,
+        const response = await axiosInstance.get(
+          `/students/batch?batch=${selectedBatch}`,
           { 
             signal: controller.signal,
             headers: {
@@ -60,9 +61,9 @@ const AttendancePage: React.FC = () => {
             },
            }
         );
-        if (!res.ok) throw new Error(`Server responded ${res.status}`);
+        if (response.status !== 200) throw new Error(`Server responded ${response.status}`);
 
-        const data: Student[] = await res.json();
+        const data: Student[] = response.data;
         setStudents(data);
         setAttendance({}); // reset attendance for fresh list
       } catch (err) {

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Calendar, User, TrendingUp, Clock, CheckCircle, XCircle, Coffee, Sunset } from 'lucide-react';
+import axiosInstance from '../axios/axiosinstance';
 
 interface Summary {
     presentDays: number;
@@ -31,19 +32,18 @@ const AttendanceSummary: React.FC = () => {
         setError(null);
 
         try {
-            const response = await fetch('http://localhost:8080/api/attendance/monthly-summary?' + 
-                new URLSearchParams({
-                    teacherId: teacherId.toString(),
-                    year: year.toString(),
-                    month: month.toString()
-                })
-            );
+            const params = new URLSearchParams({
+                teacherId: teacherId.toString(),
+                year: year.toString(),
+                month: month.toString()
+            });
+            const response = await axiosInstance.get(`/api/attendance/monthly-summary?${params}`);
 
-            if (!response.ok) {
+            if (response.status !== 200) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
-            const data = await response.json();
+            const data = response.data;
             setSummary(data);
         } catch (err) {
             console.error('Error fetching attendance summary:', err);
@@ -86,14 +86,12 @@ const AttendanceSummary: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6">
+        <div className="min-h-screen p-6">
             <div className="max-w-4xl mx-auto">
                 {/* Header */}
                 <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full mb-4 shadow-lg">
-                        <TrendingUp className="w-8 h-8 text-white" />
-                    </div>
-                    <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+                  
+                    <h1 className="text-4xl font-bold bg-blue-600 bg-clip-text text-transparent mb-2">
                         Attendance Analytics
                     </h1>
                     <p className="text-gray-600 text-lg">Track and analyze monthly attendance patterns</p>
@@ -158,7 +156,7 @@ const AttendanceSummary: React.FC = () => {
                         className={`w-full mt-6 py-4 px-6 rounded-xl font-semibold text-white transition-all duration-300 ${
                             loading
                                 ? 'bg-gray-400 cursor-not-allowed'
-                                : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
+                                : 'bg-blue-500 hover:from-blue-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
                         }`}
                     >
                         {loading ? (
