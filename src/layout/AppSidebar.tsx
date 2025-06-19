@@ -91,6 +91,7 @@ const adminNavItems: NavItem[] = [
     subItems: [
       { name: "Add Student", path: "/student-form", pro: false },
       { name: "Add Teacher", path: "/teacher-form", pro: false },
+      { name: "Student List", path: "/viewstudentdetails", pro: false },
     ],
     roles: ["admin", "teacher"],
   },

@@ -95,7 +95,7 @@ const ViewStudentDetails: React.FC = () => {
                         <div className="flex items-center space-x-3">
                             <Users className="h-8 w-8 text-blue-600 dark:text-blue-400" />
                             <div>
-                                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Student Management</h1>
+                                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Student Details</h1>
                                 <p className="text-gray-600 dark:text-gray-300">Manage students by class - Role: {userRole}</p>
                             </div>
                         </div>
