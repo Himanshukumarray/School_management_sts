@@ -27,7 +27,7 @@ const ViewStudentDetails: React.FC = () => {
     const [error, setError] = useState<string>('');
     const [userRole, setUserRole] = useState<string>('admin'); // Get from session
 
-    Available classes
+    // Available classes
     const classes = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
 
     // Simulate getting role from session
