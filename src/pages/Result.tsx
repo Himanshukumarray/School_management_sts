@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { AlertCircle, CheckCircle, Loader2, GraduationCap } from 'lucide-react';
+import axiosInstance from '../axios/axiosinstance';
 
 // Types based on actual backend structure
 interface Student {
@@ -71,9 +72,9 @@ const StudentPage: React.FC = () => {
       const [obtained, max] = marksString.split('/').map(num => parseInt(num));
       const percentage = (obtained / max) * 100;
       const status: 'PASS' | 'FAIL' = percentage >= 40 ? 'PASS' : 'FAIL'; // Assuming 40% is pass mark
-      
+
       if (status === 'PASS') passCount++;
-      
+
       subjects.push({
         subjectName,
         marks: marksString,
@@ -82,14 +83,14 @@ const StudentPage: React.FC = () => {
         percentage,
         status
       });
-      
+
       totalObtained += obtained;
       totalMax += max;
     });
 
     const overallPercentage = (totalObtained / totalMax) * 100;
     const overallStatus: 'PASS' | 'FAIL' = passCount === subjects.length ? 'PASS' : 'FAIL';
-    
+
     // Determine grade based on percentage
     let overallGrade = 'F';
     if (overallPercentage >= 90) overallGrade = 'A+';
@@ -144,11 +145,10 @@ const StudentPage: React.FC = () => {
         classId
       });
 
-      const url = `http://localhost:8080/api/results?${params}`;
-      console.log('Request URL:', url);
+      const url = `/results?${params}`;
+      console.log('Request URL:', `http://localhost:8080/api${url}`);
 
-      const response = await fetch(url, {
-        method: 'GET',
+      const response = await axiosInstance.get(url, {
         headers: {
           'tenant': sessionStorage.getItem('tenant') || '',
           'Content-Type': 'application/json',
@@ -159,20 +159,20 @@ const StudentPage: React.FC = () => {
       console.log('Response status:', response.status);
       console.log('Response headers:', response.headers);
 
-      if (response.ok) {
-        const resultData: ActualApiResponse = await response.json();
+      if (response.status === 200) {
+        const resultData: ActualApiResponse = response.data;
         console.log('Raw API Response:', resultData);
-        
+
         // Process the API response to match our display format
         const processedResult = processApiResponse(resultData);
         console.log('Processed Result:', processedResult);
-        
+
         setResult(processedResult);
         setSuccess('Result found successfully!');
       } else {
-        const errorData = await response.json().catch(() => null);
+        const errorData = response.data;
         console.log('Error Response:', errorData); // Debug log
-        
+
         if (response.status === 404) {
           setError('No result found for the provided details.');
         } else if (response.status === 400) {
@@ -222,7 +222,7 @@ const StudentPage: React.FC = () => {
           <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
             Student Information
           </h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -389,11 +389,10 @@ const StudentPage: React.FC = () => {
                           {subject.percentage.toFixed(1)}%
                         </td>
                         <td className="border border-gray-300 dark:border-gray-600 px-4 py-3 text-center">
-                          <span className={`px-2 py-1 rounded-full text-sm font-medium ${
-                            subject.status === 'PASS' 
-                              ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100' 
+                          <span className={`px-2 py-1 rounded-full text-sm font-medium ${subject.status === 'PASS'
+                              ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
                               : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'
-                          }`}>
+                            }`}>
                             {subject.status}
                           </span>
                         </td>
@@ -417,21 +416,18 @@ const StudentPage: React.FC = () => {
                   <h4 className="font-semibold text-purple-800 dark:text-purple-200">Percentage</h4>
                   <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">{result.percentage.toFixed(2)}%</p>
                 </div>
-                <div className={`p-4 rounded-lg ${
-                  result.overallStatus === 'PASS' 
-                    ? 'bg-green-50 dark:bg-green-900' 
+                <div className={`p-4 rounded-lg ${result.overallStatus === 'PASS'
+                    ? 'bg-green-50 dark:bg-green-900'
                     : 'bg-red-50 dark:bg-red-900'
-                }`}>
-                  <h4 className={`font-semibold ${
-                    result.overallStatus === 'PASS' 
-                      ? 'text-green-800 dark:text-green-200' 
+                  }`}>
+                  <h4 className={`font-semibold ${result.overallStatus === 'PASS'
+                      ? 'text-green-800 dark:text-green-200'
                       : 'text-red-800 dark:text-red-200'
-                  }`}>Overall Status</h4>
-                  <p className={`text-2xl font-bold ${
-                    result.overallStatus === 'PASS' 
-                      ? 'text-green-900 dark:text-green-100' 
+                    }`}>Overall Status</h4>
+                  <p className={`text-2xl font-bold ${result.overallStatus === 'PASS'
+                      ? 'text-green-900 dark:text-green-100'
                       : 'text-red-900 dark:text-red-100'
-                  }`}>{result.overallStatus}</p>
+                    }`}>{result.overallStatus}</p>
                 </div>
               </div>
 
