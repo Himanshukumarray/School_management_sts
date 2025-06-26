@@ -208,21 +208,18 @@ const TeacherPage: React.FC = () => {
     setMessage({ type: '', text: '' });
 
     try {
-      const response = await fetch('http://localhost:8080/api/results', {
-        method: 'POST',
+      const response = await axiosInstance.get('http://localhost:8080/api/results', {
         headers: {
-          'tenant': sessionStorage.getItem('tenant') || '',
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${sessionStorage.getItem('token')}`
-        },
-        body: JSON.stringify(payload)
-      });
+    'tenant': sessionStorage.getItem('tenant') || '',
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${sessionStorage.getItem('token')}`
+  }
+});
 
-      if (response.ok) {
+      if (response.status === 200) {
         setMessage({ type: 'success', text: 'Results saved successfully!' });
       } else {
-        const errorText = await response.text();
-        console.error('Save error:', errorText);
+        console.error('Save error:', response.data);
         setMessage({ type: 'error', text: 'Failed to save results. Please try again.' });
       }
     } catch (error) {
