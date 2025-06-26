@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Search, User, Calendar, BookOpen, Save, Trash2, AlertCircle, CheckCircle, X } from 'lucide-react';
+import axiosInstance from '../axios/axiosinstance';
 
 interface SearchForm {
   studentAdmissionId: string;
@@ -91,8 +92,7 @@ const TeacherPage: React.FC = () => {
         classId: searchForm.classId
       });
 
-      const response = await fetch(`http://localhost:8080/api/results?${queryParams}`, {
-        method: 'GET',
+      const response = await axiosInstance.get(`http://localhost:8080/api/results?${queryParams}`, {
         headers: {
           'tenant': sessionStorage.getItem('tenant') || '',
           'Content-Type': 'application/json',
@@ -100,15 +100,16 @@ const TeacherPage: React.FC = () => {
         }
       });
 
-      if (response.ok) {
-        const result: Result = await response.json();
+
+      if (response.status === 200) {
+        const result: Result = response.data;
         setStudentData({
           admissionId: searchForm.studentAdmissionId,
           dateOfBirth: searchForm.dateOfBirth,
           classId: searchForm.classId,
           existingResult: result
         });
-        
+
         // If existing result found, populate the form
         if (result && result.subjects) {
           setSubjects(prev => prev.map(subject => {
@@ -128,7 +129,7 @@ const TeacherPage: React.FC = () => {
             studentAdmissionId: searchForm.studentAdmissionId
           }));
         }
-        
+
         setCurrentStep('marks');
         setMessage({ type: 'success', text: 'Student found! You can now enter marks.' });
       } else if (response.status === 404) {
@@ -160,12 +161,12 @@ const TeacherPage: React.FC = () => {
     const updatedSubjects = [...subjects];
     updatedSubjects[index].obtainedMarks = value;
     setSubjects(updatedSubjects);
-    
+
     // Calculate total marks
     const total = updatedSubjects.reduce((sum, subject) => {
       return sum + (parseInt(subject.obtainedMarks.toString()) || 0);
     }, 0);
-    
+
     setResultData(prev => ({
       ...prev,
       totalMarks: total,
@@ -190,7 +191,7 @@ const TeacherPage: React.FC = () => {
   const saveResult = async (): Promise<void> => {
     const totalMaxMarks = subjects.reduce((sum, subject) => sum + subject.maxMarks, 0);
     const grade = calculateGrade(resultData.totalMarks, totalMaxMarks);
-    
+
     const payload: Omit<Result, 'id'> = {
       studentAdmissionId: parseInt(resultData.studentAdmissionId),
       grade,
@@ -269,10 +270,9 @@ const TeacherPage: React.FC = () => {
 
         {/* Message Display */}
         {message.text && (
-          <div className={`mb-6 p-4 rounded-lg flex items-center gap-3 ${
-            message.type === 'success' ? 'bg-green-100 text-green-800 border border-green-200' : 
-            'bg-red-100 text-red-800 border border-red-200'
-          }`}>
+          <div className={`mb-6 p-4 rounded-lg flex items-center gap-3 ${message.type === 'success' ? 'bg-green-100 text-green-800 border border-green-200' :
+              'bg-red-100 text-red-800 border border-red-200'
+            }`}>
             {message.type === 'success' ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
             {message.text}
           </div>
@@ -281,25 +281,20 @@ const TeacherPage: React.FC = () => {
         {/* Step Indicator */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
           <div className="flex items-center justify-center space-x-8">
-            <div className={`flex items-center space-x-2 ${
-              currentStep === 'search' ? 'text-blue-600' : 'text-gray-400'
-            }`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                currentStep === 'search' ? 'bg-blue-600 text-white' : 'bg-gray-200'
+            <div className={`flex items-center space-x-2 ${currentStep === 'search' ? 'text-blue-600' : 'text-gray-400'
               }`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep === 'search' ? 'bg-blue-600 text-white' : 'bg-gray-200'
+                }`}>
                 1
               </div>
               <span className="font-medium">Search Student</span>
             </div>
-            <div className={`w-12 h-1 ${
-              currentStep === 'marks' ? 'bg-blue-600' : 'bg-gray-200'
-            }`}></div>
-            <div className={`flex items-center space-x-2 ${
-              currentStep === 'marks' ? 'text-blue-600' : 'text-gray-400'
-            }`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                currentStep === 'marks' ? 'bg-blue-600 text-white' : 'bg-gray-200'
+            <div className={`w-12 h-1 ${currentStep === 'marks' ? 'bg-blue-600' : 'bg-gray-200'
+              }`}></div>
+            <div className={`flex items-center space-x-2 ${currentStep === 'marks' ? 'text-blue-600' : 'text-gray-400'
               }`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep === 'marks' ? 'bg-blue-600 text-white' : 'bg-gray-200'
+                }`}>
                 2
               </div>
               <span className="font-medium">Enter Marks</span>
@@ -314,7 +309,7 @@ const TeacherPage: React.FC = () => {
               <Search className="text-blue-600" />
               Search Student
             </h2>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -329,7 +324,7 @@ const TeacherPage: React.FC = () => {
                   placeholder="Enter admission ID"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Date of Birth
@@ -342,7 +337,7 @@ const TeacherPage: React.FC = () => {
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Class ID
@@ -356,7 +351,7 @@ const TeacherPage: React.FC = () => {
                   placeholder="Enter class ID"
                 />
               </div>
-              
+
               {/* <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Tenant
@@ -373,7 +368,7 @@ const TeacherPage: React.FC = () => {
                 </select>
               </div> */}
             </div>
-            
+
             <button
               onClick={searchStudent}
               disabled={loading}
@@ -417,7 +412,7 @@ const TeacherPage: React.FC = () => {
             {/* Marks Entry */}
             <div className="bg-white rounded-lg shadow-lg p-6">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Enter Marks</h2>
-              
+
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
@@ -499,7 +494,7 @@ const TeacherPage: React.FC = () => {
                   )}
                   {loading ? 'Saving...' : 'Save Results'}
                 </button>
-                
+
                 <button
                   onClick={resetForm}
                   className="flex-1 bg-gray-600 text-white py-3 px-6 rounded-lg hover:bg-gray-700 flex items-center justify-center gap-2"
