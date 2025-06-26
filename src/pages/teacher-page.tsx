@@ -92,7 +92,7 @@ const TeacherPage: React.FC = () => {
         classId: searchForm.classId
       });
 
-      const response = await axiosInstance.get(`http://localhost:8080/api/results?${queryParams}`, {
+      const response = await axiosInstance.post(`http://localhost:8080/api/results?${queryParams}`, {
         headers: {
           'tenant': sessionStorage.getItem('tenant') || '',
           'Content-Type': 'application/json',
@@ -208,7 +208,7 @@ const TeacherPage: React.FC = () => {
     setMessage({ type: '', text: '' });
 
     try {
-      const response = await axiosInstance.get('http://localhost:8080/api/results', {
+      const response = await axiosInstance.post('http://localhost:8080/api/results', {
         headers: {
     'tenant': sessionStorage.getItem('tenant') || '',
     'Content-Type': 'application/json',

@@ -52,8 +52,8 @@ const adminNavItems: NavItem[] = [
     name: "Results",
     icon: <PageIcon />,
     subItems: [
-      { name: "Student", path: "/StudentResult", pro: false },
-      { name: "TeacherPage", path: "/TeacherPage", pro: false },
+      { name: "Check Results", path: "/StudentResult", pro: false },
+      { name: "Upload Result", path: "/TeacherPage", pro: false },
     ],
     roles: ["admin", "teacher"],
   },
