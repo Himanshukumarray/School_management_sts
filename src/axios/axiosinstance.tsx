@@ -69,16 +69,16 @@ axiosInstance.interceptors.request.use(
 );
 
 // Response Interceptor
-axiosInstance.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-      console.error("Unauthorized or Forbidden: Redirecting to sign-in.");
-      removeAuthData();
-      window.location.href = "/auth/signin";
-    }
-    return Promise.reject(error);
-  }
-);
+// axiosInstance.interceptors.response.use(
+//   (response) => response,
+//   (error) => {
+//     if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+//       console.error("Unauthorized or Forbidden: Redirecting to sign-in.");
+//       removeAuthData();
+//       window.location.href = "/auth/signin";
+//     }
+//     return Promise.reject(error);
+//   }
+// );
 
 export default axiosInstance;

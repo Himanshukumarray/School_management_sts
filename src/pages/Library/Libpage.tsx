@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react"; 
-import axios from "axios";
+import axiosInstance from "../../axios/axiosinstance";
 import { format } from "date-fns";
 
 type Book = {
@@ -30,7 +30,7 @@ const LibraryIssuePage: React.FC = () => {
   useEffect(() => {
     const fetchBooks = async () => {
       try {
-        const res = await axios.get("http://localhost:8080/api/library/books", {
+        const res = await axiosInstance.get("/api/library/books", {
           headers: {
             "tenant": sessionStorage.getItem('tenant'),
             'Authorization': 'Bearer ' + sessionStorage.getItem('token')
@@ -55,7 +55,7 @@ const LibraryIssuePage: React.FC = () => {
     }
 
     try {
-      const res = await axios.get(`http://localhost:8080/api/students/${id}`, {
+      const res = await axiosInstance.get(`/api/students/${id}`, {
         headers: {
           "tenant": sessionStorage.getItem('tenant'),
           'Authorization': 'Bearer ' + sessionStorage.getItem('token')
@@ -89,7 +89,7 @@ const LibraryIssuePage: React.FC = () => {
     updatedBooks[index].bookId = parsedId;
 
     try {
-      const res = await axios.get(`http://localhost:8080/api/library/books/${parsedId}`, {
+      const res = await axiosInstance.get(`/api/library/books/${parsedId}`, {
         headers: {
           "tenant": sessionStorage.getItem('tenant'),
           'Authorization': 'Bearer ' + sessionStorage.getItem('token')
@@ -150,8 +150,8 @@ const LibraryIssuePage: React.FC = () => {
 
     try {
       for (const book of validBooks) {
-        await axios.post(
-          `http://localhost:8080/api/library/books/${book.bookId}/issue`,
+        await axiosInstance.post(
+          `/api/library/books/${book.bookId}/issue`,
           null,
           {
             params: { studentId: parseInt(studentId, 10), bookId: book.bookId },

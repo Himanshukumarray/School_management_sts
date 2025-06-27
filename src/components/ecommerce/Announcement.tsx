@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import axiosInstance from "../../axios/axiosinstance";
 
 interface Event {
   id: number;
@@ -39,7 +39,7 @@ export default function NotificationPanel() {
     if (!newEvent.heading.trim()) return;
 
     try {
-      const response = await axios.post('http://localhost:8080/api/events', newEvent, {
+      const response = await axiosInstance.post('/api/events', newEvent, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ' + sessionStorage.getItem('token'),

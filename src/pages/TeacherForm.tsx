@@ -1,5 +1,5 @@
 import React, { useState, ChangeEvent, FormEvent } from 'react';
-import axios from 'axios';
+import axiosInstance from '../axios/axiosinstance'; // Adjust the import path as necessary
 
 interface Teacher {
   name: string;
@@ -42,8 +42,8 @@ const handleSubmit = async (e: FormEvent) => {
   }
 
   try {
-    const response = await axios.post(
-      'http://localhost:8080/api/teachers',
+    const response = await axiosInstance.post(
+      '/api/teachers',
       formData,
       {
         headers: {

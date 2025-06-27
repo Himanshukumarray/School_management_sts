@@ -92,17 +92,17 @@ const TeacherPage: React.FC = () => {
         classId: searchForm.classId
       });
 
-      const response = await axiosInstance.post(`http://localhost:8080/api/results?${queryParams}`, {
+      const response = await axiosInstance.get(`/api/results?${queryParams.toString()}`, {
         headers: {
           'tenant': sessionStorage.getItem('tenant') || '',
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${sessionStorage.getItem('token')}`
+          'Authorization': `Bearer ${sessionStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
         }
       });
 
-
       if (response.status === 200) {
         const result: Result = response.data;
+
         setStudentData({
           admissionId: searchForm.studentAdmissionId,
           dateOfBirth: searchForm.dateOfBirth,
@@ -110,52 +110,48 @@ const TeacherPage: React.FC = () => {
           existingResult: result
         });
 
-        // If existing result found, populate the form
-        if (result && result.subjects) {
-          setSubjects(prev => prev.map(subject => {
-            const existingSubject = result.subjects.find(s => s.name === subject.name);
-            return existingSubject ? { ...subject, obtainedMarks: existingSubject.obtainedMarks } : subject;
-          }));
-          setResultData(prev => ({
-            ...prev,
-            studentAdmissionId: searchForm.studentAdmissionId,
-            totalMarks: result.totalMarks || 0,
-            grade: result.grade || '',
-            remarks: result.remarks || ''
-          }));
-        } else {
-          setResultData(prev => ({
-            ...prev,
-            studentAdmissionId: searchForm.studentAdmissionId
-          }));
-        }
+        setSubjects(prev => prev.map(subject => {
+          const existingSubject = result.subjects.find(s => s.name === subject.name);
+          return existingSubject ? { ...subject, obtainedMarks: existingSubject.obtainedMarks } : subject;
+        }));
+
+        setResultData({
+          studentAdmissionId: searchForm.studentAdmissionId,
+          subjects: result.subjects,
+          totalMarks: result.totalMarks,
+          grade: result.grade,
+          remarks: result.remarks
+        });
 
         setCurrentStep('marks');
         setMessage({ type: 'success', text: 'Student found! You can now enter marks.' });
-      } else if (response.status === 404) {
-        // Student found but no existing results
+      }
+    } catch (error: any) {
+      if (error.response && error.response.status === 404) {
+        // Student found but no result
         setStudentData({
           admissionId: searchForm.studentAdmissionId,
           dateOfBirth: searchForm.dateOfBirth,
           classId: searchForm.classId,
           existingResult: null
         });
+
         setResultData(prev => ({
           ...prev,
           studentAdmissionId: searchForm.studentAdmissionId
         }));
+
         setCurrentStep('marks');
         setMessage({ type: 'success', text: 'Student found! No existing results. You can enter new marks.' });
       } else {
-        setMessage({ type: 'error', text: 'Student not found or invalid details' });
+        console.error('Error searching for student:', error);
+        setMessage({ type: 'error', text: 'Error searching for student. Please try again.' });
       }
-    } catch (error) {
-      console.error('Error searching for student:', error);
-      setMessage({ type: 'error', text: 'Error searching for student. Please try again.' });
     } finally {
       setLoading(false);
     }
   };
+
 
   const handleSubjectMarksChange = (index: number, value: string): void => {
     const updatedSubjects = [...subjects];
@@ -208,13 +204,13 @@ const TeacherPage: React.FC = () => {
     setMessage({ type: '', text: '' });
 
     try {
-      const response = await axiosInstance.post('http://localhost:8080/api/results', {
+      const response = await axiosInstance.post('/api/results', payload, {
         headers: {
-    'tenant': sessionStorage.getItem('tenant') || '',
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${sessionStorage.getItem('token')}`
-  }
-});
+          'tenant': sessionStorage.getItem('tenant') || '',
+          'Authorization': `Bearer ${sessionStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
       if (response.status === 200) {
         setMessage({ type: 'success', text: 'Results saved successfully!' });
@@ -268,7 +264,7 @@ const TeacherPage: React.FC = () => {
         {/* Message Display */}
         {message.text && (
           <div className={`mb-6 p-4 rounded-lg flex items-center gap-3 ${message.type === 'success' ? 'bg-green-100 text-green-800 border border-green-200' :
-              'bg-red-100 text-red-800 border border-red-200'
+            'bg-red-100 text-red-800 border border-red-200'
             }`}>
             {message.type === 'success' ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
             {message.text}
