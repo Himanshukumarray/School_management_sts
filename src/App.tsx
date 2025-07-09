@@ -38,6 +38,8 @@ import TeacherForm from "./pages/TeacherForm";
 import ProtectedRoute from "./components/ProtectedRoute";
 import EmailComposer from "./pages/Dashboard/Mail";
 import ViewStudentDetails from "./pages/ViewStudentDetails";
+import ViewStudentFeeDetail from "./pages/Fee";
+import FeesPage from "./pages/FeePayment";
 
 const App: React.FC = () => {
   return (
@@ -93,6 +95,24 @@ const App: React.FC = () => {
             }
           />
 
+          {/* Fee Detail Page */}
+          <Route
+            path="/ViewStudentFeeDetail"
+            element={
+              <ProtectedRoute allowedRoles={["admin", "teacher"]}>
+                <ViewStudentFeeDetail />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/FeesPage"
+            element={
+              <ProtectedRoute allowedRoles={["admin", "teacher"]}>
+                <FeesPage />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/AttendancePage"
             element={

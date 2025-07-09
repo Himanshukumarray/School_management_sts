@@ -14,7 +14,7 @@ import {
   UserCircleIcon,
 } from "../icons";
 import { GiArchiveRegister } from "react-icons/gi";
-import { MdLocalLibrary } from "react-icons/md";
+import { MdLocalLibrary,MdOutlinePayments } from "react-icons/md";
 
 import { useSidebar } from "../context/SidebarContext";
 import SidebarWidget from "./SidebarWidget";
@@ -47,7 +47,7 @@ const adminNavItems: NavItem[] = [
     path: "/profile",
     roles: ["admin", "student", "teacher"],
   },
- 
+
   {
     name: "Results",
     icon: <PageIcon />,
@@ -83,7 +83,7 @@ const adminNavItems: NavItem[] = [
     name: "Syllabus",
     icon: <TableIcon />,
     subItems: [{ name: "Syllabus", path: "/SyllabusPage", pro: false }],
-    roles: ["admin", "student",  "teacher"],
+    roles: ["admin", "student", "teacher"],
   },
   {
     icon: <GiArchiveRegister />,
@@ -92,9 +92,20 @@ const adminNavItems: NavItem[] = [
       { name: "Add Student", path: "/student-form", pro: false },
       { name: "Add Teacher", path: "/teacher-form", pro: false },
       { name: "Student List", path: "/viewstudentdetails", pro: false },
+      { name: "Fees Page", path: "/FeesPage", pro: false },
+      { name: "Fee Details", path: "/ViewStudentFeeDetail", pro: false },
     ],
     roles: ["admin", "teacher"],
   },
+  {
+    icon: <MdOutlinePayments/>,
+    name: "Fees and Payments",
+    subItems: [
+      { name: "Fees Page", path: "/FeesPage", pro: false },
+      { name: "Fee Details", path: "/ViewStudentFeeDetail", pro: false },
+    ],
+    roles: ["admin", "teacher"],
+  }
 ];
 
 // Student navigation items
@@ -114,7 +125,7 @@ const studentNavItems: NavItem[] = [
     name: "User Profile",
     path: "/profile",
   },
-  
+
   {
     icon: < MdLocalLibrary />,
     name: "Library",
@@ -130,7 +141,7 @@ const studentNavItems: NavItem[] = [
     subItems: [{ name: "Syllabus", path: "/SyllabusPage", pro: false }],
   },
 
-  
+
 
 ];
 
